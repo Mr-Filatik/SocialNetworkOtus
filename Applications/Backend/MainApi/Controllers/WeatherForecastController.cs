@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using SocialNetworkOtus.Applications.Backend.MainApi.Models;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]

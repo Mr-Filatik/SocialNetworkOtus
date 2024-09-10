@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialNetworkOtus", "SocialNetworkOtus\SocialNetworkOtus.csproj", "{CE7019A5-19B9-4C8E-8BA2-C98E85D5B48D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocialNetworkOtus", "SocialNetworkOtus\SocialNetworkOtus.csproj", "{CE7019A5-19B9-4C8E-8BA2-C98E85D5B48D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{8246EDE5-4CA0-4927-9EEB-B9563E52160F}"
 EndProject
@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{73D9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{901DE66F-FB8D-43C0-8E33-A5B37591E14B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainApi", "Applications\Backend\MainApi\MainApi.csproj", "{FFB8FAC0-49BA-469A-B7AF-262FB8CF9833}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MainApi", "Applications\Backend\MainApi\MainApi.csproj", "{FFB8FAC0-49BA-469A-B7AF-262FB8CF9833}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
