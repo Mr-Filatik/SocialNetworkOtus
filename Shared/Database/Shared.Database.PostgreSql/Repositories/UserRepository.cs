@@ -50,25 +50,32 @@ public class UserRepository
     {
         User user = null;
         using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        //using var command = new NpgsqlCommand(
+        //    """
+        //    SELECT user_id, first_name, second_name, password_hash, gender, date_of_birth 
+        //    FROM users
+        //    WHERE user_id='@insert_id';
+        //    """, connection);
+        //command.Parameters.AddWithValue("insert_id", id); //dont work
         using var command = new NpgsqlCommand(
-            """
-            SELECT user_id, first_name, second_name, password_hash, gender, date_of_birth 
-            FROM public.users
-            WHERE user_id='@insert_id';
+            $"""
+            SELECT *
+            FROM users
+            WHERE user_id='{id}';
             """, connection);
-        command.Parameters.AddWithValue("insert_id", id);
         using var reader = command.ExecuteReader();
         if (reader.HasRows)
         {
-            _logger.LogInformation("Read");
             reader.Read();
             user = new User()
             {
-                //reader.GetFieldValue()
                 Id = reader["user_id"].ToString(),
+                FirstName = reader["first_name"].ToString(),
+                SecondName = reader["second_name"].ToString(),
+                Gender = bool.Parse(reader["gender"].ToString()) ? Entities.Types.Gender.Male : Entities.Types.Gender.Female,
+                DateOfBirth = DateTime.Parse(reader["date_of_birth"].ToString()),
             };
         }
-        //var user = _users.FirstOrDefault(x => x.Id == id);
         return user != null;
     }
 }

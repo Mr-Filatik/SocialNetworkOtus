@@ -42,8 +42,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                 return BadRequest("Invalid data");
             }
 
-            var token = new LoginResponse() { Token = Guid.NewGuid().ToString() };
-            return Ok(token);
+            return Ok(new LoginResponse() { Token = Guid.NewGuid().ToString() });
         }
 
         //[ResponseType(typeof(User))]
