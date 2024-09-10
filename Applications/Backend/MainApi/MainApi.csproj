@@ -15,4 +15,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Database\Shared.Database.Entities\Shared.Database.Entities.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Database\Shared.Database.PostgreSql\Shared.Database.PostgreSql.csproj" />
+  </ItemGroup>
+
 </Project>

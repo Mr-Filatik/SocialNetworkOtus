@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using SocialNetworkOtus.Applications.Backend.MainApi.Models;
+using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 using System.Net;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
@@ -12,10 +13,12 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
     public class LoginController : ControllerBase
     {
         private readonly ILogger<LoginController> _logger;
+        private readonly UserRepository _userRepository;
 
-        public LoginController(ILogger<LoginController> logger)
+        public LoginController(ILogger<LoginController> logger, UserRepository userRepository)
         {
             _logger = logger;
+            _userRepository = userRepository;
         }
 
         [HttpPost]
@@ -27,8 +30,8 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                 return BadRequest("Invalid data");
             }
 
-            var isUser = new User() != null;
-            if (!isUser || request.Id == "error")
+            var isUser = _userRepository.HasUser(request.Id);
+            if (!isUser)
             {
                 return NotFound("User not found");
             }
