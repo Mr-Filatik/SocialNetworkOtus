@@ -22,38 +22,52 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         }
 
         [HttpPost]
-        //[ActionResultStatusCode(BadRequest)] добавить 404, 200, 400
+        [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
+        [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
+        [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            if (request is null)
+            try
             {
-                return BadRequest("Invalid data");
-            }
+                if (request is null)
+                {
+                    return BadRequest(new MessageResponse()
+                    {
+                        Message = "Invalid data",
+                    });
+                }
 
-            var isUser = _userRepository.HasUser(request.Id);
-            if (!isUser)
+                var user = _userRepository.Get(request.Id);
+                if (user is null)
+                {
+                    return NotFound(new MessageResponse()
+                    {
+                        Message = "User not found",
+                    });
+                }
+
+                var isPassword = _userRepository.VerifyPassword(request.Id, request.Password);
+                if (!isPassword)
+                {
+                    return BadRequest(new MessageResponse()
+                    {
+                        Message = "Invalid data",
+                    });
+                }
+
+                return Ok(new LoginResponse()
+                { 
+                    Token = Guid.NewGuid().ToString(),
+                });
+            }
+            catch (Exception ex)
             {
-                return NotFound("User not found");
+                return StatusCode(500, new ErrorResponse()
+                {
+                    Message = ex.Message, //dont return message
+                });
             }
-
-            var isPassword = true;
-            if (!isPassword || request.Password == "error")
-            {
-                return BadRequest("Invalid data");
-            }
-
-            return Ok(new LoginResponse() { Token = Guid.NewGuid().ToString() });
         }
-
-        //[ResponseType(typeof(User))]
-        //public HttpResponseMessage GetUser(HttpRequestMessage request, int userId, DateTime lastModifiedAtClient)
-        //{
-        //    var user = new DataEntities().Users.First(p => p.Id == userId);
-        //    if (user.LastModified <= lastModifiedAtClient)
-        //    {
-        //        return new HttpResponseMessage(HttpStatusCode.NotModified);
-        //    }
-        //    return request.CreateResponse(HttpStatusCode.OK, user);
-        //}
     }
 }

@@ -2,13 +2,14 @@
 
 namespace SocialNetworkOtus.Shared.Database.Entities;
 
-public class User
+public class UserEntity
 {
     public string Id { get; set; }
     public string FirstName { get; set; }
     public string SecondName { get; set; }
-    public string Password { get; set; }
+    public string PasswordHash { get; set; }
+    public string PasswordSalt { get; set; }
     public Gender Gender { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public City City { get; set; }
+    public CityEntity City { get; set; }
 }
