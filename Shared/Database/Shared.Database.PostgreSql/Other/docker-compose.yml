@@ -1,0 +1,16 @@
+version: '3.9'
+
+name: postgres-dev
+
+services:
+  postgres:
+    image: postgres:latest
+    hostname: postgres
+    container_name: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: "maindb"
+      POSTGRES_USER: "mainuser"
+      POSTGRES_PASSWORD: "mainpassword"
+    
