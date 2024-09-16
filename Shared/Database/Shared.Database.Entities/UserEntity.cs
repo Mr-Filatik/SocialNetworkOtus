@@ -11,5 +11,7 @@ public class UserEntity
     public string PasswordSalt { get; set; }
     public Gender Gender { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public CityEntity City { get; set; }
+    public string City { get; set; }
+    //public CityEntity City { get; set; }
+    public string[] Interests { get; set; }
 }

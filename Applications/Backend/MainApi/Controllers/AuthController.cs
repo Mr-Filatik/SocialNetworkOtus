@@ -9,13 +9,13 @@ using System.Net;
 namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
 {
     [ApiController]
-    [Route("api/login")]
-    public class LoginController : ControllerBase
+    [Route("api/auth")]
+    public class AuthController : ControllerBase
     {
-        private readonly ILogger<LoginController> _logger;
+        private readonly ILogger<AuthController> _logger;
         private readonly UserRepository _userRepository;
 
-        public LoginController(ILogger<LoginController> logger, UserRepository userRepository)
+        public AuthController(ILogger<AuthController> logger, UserRepository userRepository)
         {
             _logger = logger;
             _userRepository = userRepository;
@@ -26,6 +26,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
+        [Route("~/api/login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
             try

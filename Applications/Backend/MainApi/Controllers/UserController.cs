@@ -44,8 +44,10 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                     Id = user.Id,
                     FirstName = user.FirstName,
                     SecondName = user.SecondName,
-                    Gender = user.Gender == Gender.Male,
+                    GenderIsMale = user.Gender == Gender.Male,
                     DateOfBirth = user.DateOfBirth,
+                    City = user.City,
+                    Interests = user.Interests,
                 });
             }
             catch (Exception ex)
@@ -58,31 +60,39 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         }
 
         [HttpGet("search")]
-        [ProducesResponseType<UserGetResponse>(StatusCodes.Status200OK)]
+        [ProducesResponseType<UserGetResponse[]>(StatusCodes.Status200OK)]
         [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
         public IActionResult Search([FromQuery] string firstName, string secondName)
         {
             try
             {
-                var user = _userRepository.Search(firstName, secondName);
+                var users = _userRepository.Search(firstName, secondName);
 
-                if (user is null)
+                if (!users.Any())
                 {
                     return NotFound(new MessageResponse()
                     {
-                        Message = "User not found",
+                        Message = "Users not found",
                     });
                 }
 
-                return Ok(new UserGetResponse()
+                var response = new List<UserGetResponse>();
+                foreach (var user in users)
                 {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    SecondName = user.SecondName,
-                    Gender = user.Gender == Gender.Male,
-                    DateOfBirth = user.DateOfBirth,
-                });
+                    response.Add(new UserGetResponse()
+                    {
+                        Id = user.Id,
+                        FirstName = user.FirstName,
+                        SecondName = user.SecondName,
+                        GenderIsMale = user.Gender == Gender.Male,
+                        DateOfBirth = user.DateOfBirth,
+                        City = user.City,
+                        Interests = user.Interests,
+                    });
+                }
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -106,7 +116,9 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                     SecondName = value.SecondName,
                     PasswordHash = value.Password,
                     DateOfBirth = value.DateOfBirth,
-                    Gender = Gender.Male,
+                    Gender = value.GenderIsMale ? Gender.Male : Gender.Female,
+                    City = value.City,
+                    Interests = value.Interests,
                 };
 
                 var userId = _userRepository.Add(user);

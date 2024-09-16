@@ -27,6 +27,10 @@ public static class Program
 
         var app = builder.Build();
 
+        //initing services
+        var userRepository = app.Services.GetRequiredService<UserRepository>();
+        userRepository.Init();
+
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
