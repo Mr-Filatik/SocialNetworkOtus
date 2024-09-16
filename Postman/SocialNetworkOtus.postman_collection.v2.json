@@ -1,0 +1,283 @@
+{
+	"info": {
+		"_postman_id": "3130ca23-5c2a-4846-86cf-369f16cbb6ca",
+		"name": "SocialNetworkOtus",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "37169940"
+	},
+	"item": [
+		{
+			"name": "Get profiles (no-auth)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"Token\", \"\");\r",
+							"pm.collectionVariables.set(\"CurrentUserId\", \"\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{Token}}"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Address}}/user/search?firstName=Vlad&secondName=Fil",
+					"host": [
+						"{{Address}}"
+					],
+					"path": [
+						"user",
+						"search"
+					],
+					"query": [
+						{
+							"key": "firstName",
+							"value": "Vlad"
+						},
+						{
+							"key": "secondName",
+							"value": "Fil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add new user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json();\r",
+							"var id = responseJson.id;\r",
+							"pm.collectionVariables.set(\"CurrentUserId\", id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{Token}}"
+					}
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"firstName\": \"Vlad\",\r\n  \"secondName\": \"Filin\",\r\n  \"password\": \"{{CurrentUserPassword}}\",\r\n  \"genderIsMale\": true,\r\n  \"dateOfBirth\": \"2000-03-03T00:00:00.000Z\",\r\n  \"city\": \"Volgograd\",\r\n  \"interests\": [\r\n    \"Sport\"\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{Address}}/user/register"
+			},
+			"response": []
+		},
+		{
+			"name": "Get my profile (no-auth)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{Token}}"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": "{{Address}}/user/get/{{CurrentUserId}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json();\r",
+							"var token = responseJson.token;\r",
+							"pm.collectionVariables.set(\"Token\", token);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": \"{{CurrentUserId}}\",\r\n  \"password\": \"{{CurrentUserPassword}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{Address}}/login"
+			},
+			"response": []
+		},
+		{
+			"name": "Get my profile (auth)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{Token}}"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": "{{Address}}/user/get/{{CurrentUserId}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Get profiles (auth)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{Token}}"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Address}}/user/search?firstName=Vlad&secondName=Fil",
+					"host": [
+						"{{Address}}"
+					],
+					"path": [
+						"user",
+						"search"
+					],
+					"query": [
+						{
+							"key": "firstName",
+							"value": "Vlad"
+						},
+						{
+							"key": "secondName",
+							"value": "Fil"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Address",
+			"value": "https://localhost:7180/api",
+			"type": "string"
+		},
+		{
+			"key": "Token",
+			"value": ""
+		},
+		{
+			"key": "DefaultUserId",
+			"value": "e0c8b889-d677-4e10-9d9b-cd202a113bda",
+			"type": "string"
+		},
+		{
+			"key": "CurrentUserId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "CurrentUserPassword",
+			"value": "password",
+			"type": "string"
+		}
+	]
+}
