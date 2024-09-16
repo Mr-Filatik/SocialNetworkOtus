@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SocialNetworkOtus.Applications.Backend.MainApi.Models;
 using SocialNetworkOtus.Shared.Database.Entities;
 using SocialNetworkOtus.Shared.Database.Entities.Types;
@@ -9,6 +11,7 @@ using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/user")]
     public class UserController : ControllerBase
     {
@@ -104,6 +107,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         [ProducesResponseType<UserRegisterResponse>(StatusCodes.Status200OK)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
         public IActionResult Register([FromBody] UserRegisterRequest value)

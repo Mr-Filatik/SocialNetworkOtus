@@ -20,6 +20,7 @@ public class UserRepository
 
     public void Init()
     {
+        //delete later
         try
         {
             using var testconnection = _databaseSelector.GetDatabase().OpenConnection();

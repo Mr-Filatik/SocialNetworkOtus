@@ -2,9 +2,13 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.IdentityModel.Tokens;
 using SocialNetworkOtus.Applications.Backend.MainApi.Models;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
 {
@@ -14,11 +18,13 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
     {
         private readonly ILogger<AuthController> _logger;
         private readonly UserRepository _userRepository;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(ILogger<AuthController> logger, UserRepository userRepository)
+        public AuthController(ILogger<AuthController> logger, UserRepository userRepository, IConfiguration configuration)
         {
             _logger = logger;
             _userRepository = userRepository;
+            _configuration = configuration;
         }
 
         [HttpPost]
@@ -58,8 +64,8 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                 }
 
                 return Ok(new LoginResponse()
-                { 
-                    Token = Guid.NewGuid().ToString(),
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(GenerateAccessToken(request.Id)),
                 });
             }
             catch (Exception ex)
@@ -69,6 +75,24 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                     Message = ex.Message, //dont return message
                 });
             }
+        }
+
+        private JwtSecurityToken GenerateAccessToken(string userId)
+        {
+            var claims = new List<Claim>
+            {
+                //new Claim(ClaimTypes.Name, userId),
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JwtSettings:Issuer"],
+                audience: _configuration["JwtSettings:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"])), SecurityAlgorithms.HmacSha256)
+            );
+
+            return token;
         }
     }
 }
