@@ -55,6 +55,8 @@ public static class Program
 
         var app = builder.Build();
 
+        Thread.Sleep(5000);
+
         //initing services
         var userRepository = app.Services.GetRequiredService<UserRepository>();
         userRepository.Init();
