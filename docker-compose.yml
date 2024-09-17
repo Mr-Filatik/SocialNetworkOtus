@@ -1,0 +1,38 @@
+name: social-network-otus
+
+
+networks:
+  dev:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    volumes:
+      - ./docker/postgresql/:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      POSTGRES_DB: "maindb"
+      POSTGRES_USER: "mainuser"
+      POSTGRES_PASSWORD: "mainpassword"
+    networks:
+      - dev
+
+  backend:
+    container_name: backend
+    depends_on:
+      - postgres
+    ports:
+      - 5009:80
+    restart: always
+    build:
+      context: .
+      dockerfile: Applications/Backend/MainApi/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__PostgreOptions=Username=mainuser;Password=mainpassword;Server=postgres;Port=5432;Database=maindb;
+    networks:
+      - dev
