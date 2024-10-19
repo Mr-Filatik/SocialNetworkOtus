@@ -23,12 +23,12 @@ public class UserRepository
         //delete later
         try
         {
-            using var testconnection = _databaseSelector.GetDatabase().OpenConnection();
-            using var testcommand = new NpgsqlCommand(
-                """
-                    DROP TABLE IF EXISTS users;
-                    """, testconnection);
-            using var testreader = testcommand.ExecuteReader();
+            //using var testconnection = _databaseSelector.GetDatabase().OpenConnection();
+            //using var testcommand = new NpgsqlCommand(
+            //    """
+            //        DROP TABLE IF EXISTS users;
+            //        """, testconnection);
+            //using var testreader = testcommand.ExecuteReader();
 
             using var connection = _databaseSelector.GetDatabase().OpenConnection();
             using var command = new NpgsqlCommand(
@@ -45,6 +45,17 @@ public class UserRepository
                         interests text[] NOT NULL);
                     """, connection);
             using var reader = command.ExecuteReader();
+
+            // Connections must be different for each request, because there is no support multiple commands.
+            using var connectionFriends = _databaseSelector.GetDatabase().OpenConnection();
+            using var commandFriends = new NpgsqlCommand(
+                """
+                    CREATE TABLE IF NOT EXISTS friends (
+                        user_id text,
+                        friend_id text,
+                        PRIMARY KEY(user_id, friend_id));
+                    """, connectionFriends);
+            using var readerFriends = commandFriends.ExecuteReader();
 
             //https://www.postgresql.org/docs/current/sql-insert.html
 
@@ -104,6 +115,37 @@ public class UserRepository
         using var reader = command.ExecuteReader();
 
         return user.Id;
+    }
+
+    public string AddFriend(string userId, string friendId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            INSERT INTO friends (user_id, friend_id)
+            VALUES (@user_id, @friend_id)
+            ON CONFLICT (user_id, friend_id) DO NOTHING;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("friend_id", friendId);
+        using var reader = command.ExecuteReader();
+
+        return $"{userId}:{friendId}";
+    }
+
+    public string DeleteFriend(string userId, string friendId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            DELETE FROM friends
+            WHERE user_id = @user_id AND friend_id = @friend_id;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("friend_id", friendId);
+        using var reader = command.ExecuteReader();
+
+        return $"{userId}:{friendId}";
     }
 
     public bool VerifyPassword(string id, string password)

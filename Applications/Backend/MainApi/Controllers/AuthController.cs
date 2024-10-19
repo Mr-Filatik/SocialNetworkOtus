@@ -82,6 +82,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             var claims = new List<Claim>
             {
                 //new Claim(ClaimTypes.Name, userId),
+                new Claim(ClaimTypes.Name, userId),
             };
 
             var token = new JwtSecurityToken(
@@ -93,6 +94,8 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             );
 
             return token;
+
+            
         }
     }
 }
