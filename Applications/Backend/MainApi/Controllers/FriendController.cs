@@ -32,10 +32,6 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             try
             {
                 var currentUserId = GetCurrentUserId();
-                if (string.IsNullOrEmpty(currentUserId))
-                {
-                    return Unauthorized();
-                }
 
                 var user = _userRepository.Get(id);
 
@@ -72,10 +68,6 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             try
             {
                 var currentUserId = GetCurrentUserId();
-                if (string.IsNullOrEmpty(currentUserId))
-                {
-                    return Unauthorized();
-                }
 
                 var user = _userRepository.Get(id);
 

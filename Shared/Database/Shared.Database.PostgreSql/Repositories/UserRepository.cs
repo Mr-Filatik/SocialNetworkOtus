@@ -57,6 +57,18 @@ public class UserRepository
                     """, connectionFriends);
             using var readerFriends = commandFriends.ExecuteReader();
 
+            // postgre numeric datatypes https://www.postgresql.org/docs/current/datatype-numeric.html
+            using var connectionPosts = _databaseSelector.GetDatabase().OpenConnection();
+            using var commandPosts = new NpgsqlCommand(
+                """
+                    CREATE TABLE IF NOT EXISTS posts (
+                        post_id serial,
+                        author_id text NULL,
+                        content text,
+                        PRIMARY KEY(post_id));
+                    """, connectionPosts);
+            using var readerPosts = commandPosts.ExecuteReader();
+
             //https://www.postgresql.org/docs/current/sql-insert.html
 
             Add(new UserEntity()

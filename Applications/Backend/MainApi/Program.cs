@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SocialNetworkOtus.Shared.Database.PostgreSql;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration.Options;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi;
 
-public static class Program
+public class Program
 {
     public static void Main(string[] args)
     {
@@ -54,6 +56,7 @@ public static class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
+            // Add JWT bearer support
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
             {
                 In = ParameterLocation.Header,
@@ -63,6 +66,7 @@ public static class Program
                 BearerFormat = "JWT",
                 Scheme = "Bearer",
             });
+            // Add JWT bearer support
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
@@ -77,7 +81,12 @@ public static class Program
                     new string[]{}
                 }
             });
+            // Add request examples
+            options.ExampleFilters(); // add this to support examples
         });
+
+        // Add request examples
+        builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>(); // to automatically search all the example from assembly.
 
         var app = builder.Build();
 
