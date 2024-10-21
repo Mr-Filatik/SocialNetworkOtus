@@ -33,6 +33,14 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             {
                 var currentUserId = GetCurrentUserId();
 
+                if (currentUserId == id)
+                {
+                    return NotFound(new MessageResponse()
+                    {
+                        Message = "Uncorrect data",
+                    });
+                }
+
                 var user = _userRepository.Get(id);
 
                 if (user is null)
@@ -68,6 +76,14 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             try
             {
                 var currentUserId = GetCurrentUserId();
+
+                if (currentUserId == id)
+                {
+                    return NotFound(new MessageResponse()
+                    {
+                        Message = "Uncorrect data",
+                    });
+                }
 
                 var user = _userRepository.Get(id);
 

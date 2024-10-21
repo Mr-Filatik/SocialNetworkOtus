@@ -160,6 +160,53 @@ public class UserRepository
         return $"{userId}:{friendId}";
     }
 
+    //public IEnumerable<UserEntity> GetFriends(string userId)
+    //{
+
+    //}
+
+    public IEnumerable<PostEntity> GetPosts(string userId, int limit, int offset = 0)
+    {
+        if (limit < 1)
+        {
+            limit = 1;
+        }
+        if (offset < 0)
+        {
+            offset = 0;
+        }
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT *
+            FROM public.posts
+            WHERE author_id IN (
+            	SELECT friend_id
+            	FROM public.friends
+            	WHERE user_id = @user_id)
+            ORDER BY post_id DESC
+            LIMIT @limit OFFSET @offset;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("limit", limit);
+        command.Parameters.AddWithValue("offset", offset);
+        using var reader = command.ExecuteReader();
+        var posts = new List<PostEntity>();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                posts.Add(new PostEntity()
+                {
+                    PostId = int.Parse(reader["post_id"].ToString()),
+                    AuthorId = reader["author_id"].ToString(),
+                    Content = reader["content"].ToString(),
+                });
+            }
+        }
+        return posts;
+    }
+
     public bool VerifyPassword(string id, string password)
     {
         var user = Get(id);
