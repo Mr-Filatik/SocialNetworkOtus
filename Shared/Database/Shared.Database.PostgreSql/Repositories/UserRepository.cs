@@ -207,6 +207,123 @@ public class UserRepository
         return posts;
     }
 
+    public IEnumerable<PostEntity> GetMyPosts(string userId, int limit, int offset = 0)
+    {
+        if (limit < 1)
+        {
+            limit = 1;
+        }
+        if (offset < 0)
+        {
+            offset = 0;
+        }
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT *
+            FROM public.posts
+            WHERE author_id  = @user_id
+            ORDER BY post_id DESC
+            LIMIT @limit OFFSET @offset;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("limit", limit);
+        command.Parameters.AddWithValue("offset", offset);
+        using var reader = command.ExecuteReader();
+        var posts = new List<PostEntity>();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                posts.Add(new PostEntity()
+                {
+                    PostId = int.Parse(reader["post_id"].ToString()),
+                    AuthorId = reader["author_id"].ToString(),
+                    Content = reader["content"].ToString(),
+                });
+            }
+        }
+        return posts;
+    }
+
+    public PostEntity? GetPost(string userId, int postId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT *
+            FROM public.posts
+            WHERE (author_id IN (
+            	SELECT friend_id
+            	FROM public.friends
+            	WHERE user_id = @user_id) OR author_id = @user_id)
+            AND post_id = @post_id;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("post_id", postId);
+        using var reader = command.ExecuteReader();
+        var posts = new List<PostEntity>();
+        if (reader.HasRows)
+        {
+            reader.Read();
+            return new PostEntity()
+            {
+                PostId = int.Parse(reader["post_id"].ToString()),
+                AuthorId = reader["author_id"].ToString(),
+                Content = reader["content"].ToString(),
+            };
+        }
+        return null;
+    }
+
+    public int CreatePost(string userId, string content)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            INSERT INTO public.posts
+            (author_id, content)
+            VALUES(@author_id, @content);
+            """, connection);
+        command.Parameters.AddWithValue("author_id", userId);
+        command.Parameters.AddWithValue("content", content);
+        using var reader = command.ExecuteReader();
+
+        return 1;
+    }
+
+    public int DeletePost(string userId, int postId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            DELETE FROM public.posts
+            WHERE author_id = @author_id AND post_id = @post_id;
+            """, connection);
+        command.Parameters.AddWithValue("author_id", userId);
+        command.Parameters.AddWithValue("post_id", postId);
+        using var reader = command.ExecuteReader();
+
+        return 1;
+    }
+
+    public int UpdatePost(string userId, int postId, string newContent)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            UPDATE public.posts
+            SET content = @content
+            WHERE post_id = @post_id AND author_id = @author_id;
+            """, connection);
+        command.Parameters.AddWithValue("author_id", userId);
+        command.Parameters.AddWithValue("post_id", postId);
+        command.Parameters.AddWithValue("content", newContent);
+        using var reader = command.ExecuteReader();
+
+        return 1;
+    }
+
     public bool VerifyPassword(string id, string password)
     {
         var user = Get(id);
