@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SocialNetworkOtus.Shared.Cache.Redis.Configuration;
 using SocialNetworkOtus.Shared.Database.PostgreSql;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration.Options;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
@@ -88,6 +88,8 @@ public class Program
         // Add request examples
         builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>(); // to automatically search all the example from assembly.
 
+        builder.Services.AddRedisCache();
+
         var app = builder.Build();
 
         Thread.Sleep(5000);
@@ -96,12 +98,14 @@ public class Program
         var userRepository = app.Services.GetRequiredService<UserRepository>();
         userRepository.Init();
 
+        app.Services.InitRedisCache(app.Configuration["RedisOptions:Endpoint"]);
+
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
+        //if (app.Environment.IsDevelopment())
+        //{
             app.UseSwagger();
             app.UseSwaggerUI();
-        }
+        //}
 
         app.UseHttpsRedirection();
 

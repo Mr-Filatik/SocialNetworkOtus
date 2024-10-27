@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
 using SocialNetworkOtus.Shared.Database.Entities;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;
@@ -160,10 +161,28 @@ public class UserRepository
         return $"{userId}:{friendId}";
     }
 
-    //public IEnumerable<UserEntity> GetFriends(string userId)
-    //{
+    public IEnumerable<string> GetFriendIds(string userId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT user_id
+            FROM public.friends
+            WHERE friend_id = @friend_id;
+            """, connection);
+        command.Parameters.AddWithValue("friend_id", userId);
+        using var reader = command.ExecuteReader();
 
-    //}
+        var posts = new List<string>();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                posts.Add(reader["user_id"].ToString());
+            }
+        }
+        return posts;
+    }
 
     public IEnumerable<PostEntity> GetPosts(string userId, int limit, int offset = 0)
     {
@@ -205,6 +224,29 @@ public class UserRepository
             }
         }
         return posts;
+    }
+
+    public int GetPostLag(string userId, int lastPostId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT COUNT(*) as count
+            FROM public.posts
+            WHERE author_id IN (
+            	SELECT friend_id
+            	FROM public.friends
+            	WHERE user_id = @user_id) AND post_id > @post_id;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("post_id", lastPostId);
+        using var reader = command.ExecuteReader();
+        if (reader.HasRows)
+        {
+            reader.Read();
+            return int.Parse(reader["count"].ToString());
+        }
+        return 0;
     }
 
     public IEnumerable<PostEntity> GetMyPosts(string userId, int limit, int offset = 0)
@@ -276,20 +318,29 @@ public class UserRepository
         return null;
     }
 
-    public int CreatePost(string userId, string content)
+    public PostEntity? CreatePost(string userId, string content)
     {
         using var connection = _databaseSelector.GetDatabase().OpenConnection();
         using var command = new NpgsqlCommand(
             $"""
             INSERT INTO public.posts
             (author_id, content)
-            VALUES(@author_id, @content);
+            VALUES(@author_id, @content) RETURNING *;
             """, connection);
         command.Parameters.AddWithValue("author_id", userId);
         command.Parameters.AddWithValue("content", content);
         using var reader = command.ExecuteReader();
-
-        return 1;
+        if (reader.HasRows)
+        {
+            reader.Read();
+            return new PostEntity()
+            {
+                PostId = int.Parse(reader["post_id"].ToString()),
+                AuthorId = reader["author_id"].ToString(),
+                Content = reader["content"].ToString(),
+            };
+        }
+        return null;
     }
 
     public int DeletePost(string userId, int postId)

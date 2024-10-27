@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SocialNetworkOtus.Applications.Backend.MainApi.Models;
+using SocialNetworkOtus.Shared.Cache.Redis;
+using SocialNetworkOtus.Shared.Database.Entities;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -15,11 +18,13 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
     {
         private readonly ILogger<PostController> _logger;
         private readonly UserRepository _userRepository;
+        private readonly ICacher _cacher;
 
-        public PostController(ILogger<PostController> logger, UserRepository userRepository)
+        public PostController(ILogger<PostController> logger, UserRepository userRepository, ICacher cacher)
         {
             _logger = logger;
             _userRepository = userRepository;
+            _cacher = cacher;
         }
 
         [HttpPut("feed")]
@@ -30,10 +35,47 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         {
             try
             {
-                //нужен кеш сервис
+                if (limit > 1000)
+                {
+                    return BadRequest(new MessageResponse()
+                    {
+                        Message = "The limit is too high. Maximum 1000 elements.",
+                    });
+                }
+
                 var currentUserId = GetCurrentUserId();
 
-                var posts = _userRepository.GetPosts(currentUserId, limit, offset);
+                var last = _cacher.GetPosts(currentUserId, 1);
+                var posts = new List<PostEntity>();
+
+                if (last != null && last.Any())
+                {
+                    var lag = _userRepository.GetPostLag(currentUserId, last.First().PostId);
+
+                    if (lag == 0)
+                    {
+                        posts.AddRange(_cacher.GetPosts(currentUserId, limit, offset));
+                        _logger.LogInformation($"Data from database: {0}. Data from cache: {posts.Count}.");
+                    }
+                    else
+                    {
+                        if (lag > 1000)
+                        {
+                            lag = 1000;
+                        }
+                        posts.AddRange(_userRepository.GetPosts(currentUserId, lag - offset, offset));
+                        var newPostsCount = posts.Count;
+                        _cacher.SetPosts(currentUserId, posts);
+                        posts.AddRange(_cacher.GetPosts(currentUserId, limit - lag + offset, lag - offset));
+                        _logger.LogInformation($"Data from database: {newPostsCount}. Data from cache: {posts.Count - newPostsCount}.");
+                    }
+                }
+                else
+                {
+                    posts.AddRange(_userRepository.GetPosts(currentUserId, limit, offset));
+                    _cacher.SetPosts(currentUserId, posts);
+                    _logger.LogInformation($"Data from database: {posts.Count}. Data from cache: {0}.");
+                }
 
                 return Ok(new PostFeedResponse()
                 {
@@ -57,7 +99,14 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         {
             try
             {
-                //нужен кеш сервис
+                if (limit > 1000)
+                {
+                    return BadRequest(new MessageResponse()
+                    {
+                        Message = "The limit is too high. Maximum 1000 elements.",
+                    });
+                }
+
                 var currentUserId = GetCurrentUserId();
 
                 var posts = _userRepository.GetMyPosts(currentUserId, limit, offset);
@@ -113,10 +162,19 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         {
             try
             {
-                //нужен кеш сервис
                 var currentUserId = GetCurrentUserId();
 
-                _ = _userRepository.CreatePost(currentUserId, request.Content);
+                var post = _userRepository.CreatePost(currentUserId, request.Content);
+
+                var friends = _userRepository.GetFriendIds(currentUserId);
+
+                foreach (var friend in friends)
+                {
+                    if (_cacher.IsPosts(friend))
+                    {
+                        _cacher.SetPosts(friend, new List<PostEntity>() { post });
+                    }
+                }
 
                 return Ok(new MessageResponse()
                 {
