@@ -15,9 +15,22 @@ services:
       - 5432:5432
     restart: always
     environment:
-      POSTGRES_DB: "maindb"
-      POSTGRES_USER: "mainuser"
-      POSTGRES_PASSWORD: "mainpassword"
+      POSTGRES_DB: "main_db"
+      POSTGRES_USER: "main_user"
+      POSTGRES_PASSWORD: "main_password"
+    networks:
+      - dev
+
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: TRUE
+    command:
+      --port 6380
+    restart: always
+    ports:
+      - 6380:6380
     networks:
       - dev
 
@@ -33,6 +46,7 @@ services:
       dockerfile: Applications/Backend/MainApi/Dockerfile
     environment:
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__PostgreOptions=Username=mainuser;Password=mainpassword;Server=postgres;Port=5432;Database=maindb;
+      - ConnectionStrings__PostgreOptions=Username=main_user;Password=main_password;Server=postgres;Port=5432;Database=main_db;
+      - RedisOptions__Endpoint=redis:6380
     networks:
       - dev

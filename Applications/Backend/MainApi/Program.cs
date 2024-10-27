@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using SocialNetworkOtus.Shared.Cache.Redis.Configuration;
 using SocialNetworkOtus.Shared.Database.PostgreSql;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration.Options;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi;
 
-public static class Program
+public class Program
 {
     public static void Main(string[] args)
     {
@@ -51,7 +54,41 @@ public static class Program
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            // Add JWT bearer support
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "Bearer",
+            });
+            // Add JWT bearer support
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer",
+                        }
+                    },
+                    new string[]{}
+                }
+            });
+            // Add request examples
+            options.ExampleFilters(); // add this to support examples
+        });
+
+        // Add request examples
+        builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>(); // to automatically search all the example from assembly.
+
+        builder.Services.AddRedisCache();
 
         var app = builder.Build();
 
@@ -61,12 +98,14 @@ public static class Program
         var userRepository = app.Services.GetRequiredService<UserRepository>();
         userRepository.Init();
 
+        app.Services.InitRedisCache(app.Configuration["RedisOptions:Endpoint"]);
+
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
+        //if (app.Environment.IsDevelopment())
+        //{
             app.UseSwagger();
             app.UseSwaggerUI();
-        }
+        //}
 
         app.UseHttpsRedirection();
 

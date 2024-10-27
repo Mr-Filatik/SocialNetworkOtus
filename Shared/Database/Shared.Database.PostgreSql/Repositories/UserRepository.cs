@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
 using SocialNetworkOtus.Shared.Database.Entities;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,12 +24,12 @@ public class UserRepository
         //delete later
         try
         {
-            using var testconnection = _databaseSelector.GetDatabase().OpenConnection();
-            using var testcommand = new NpgsqlCommand(
-                """
-                    DROP TABLE IF EXISTS users;
-                    """, testconnection);
-            using var testreader = testcommand.ExecuteReader();
+            //using var testconnection = _databaseSelector.GetDatabase().OpenConnection();
+            //using var testcommand = new NpgsqlCommand(
+            //    """
+            //        DROP TABLE IF EXISTS users;
+            //        """, testconnection);
+            //using var testreader = testcommand.ExecuteReader();
 
             using var connection = _databaseSelector.GetDatabase().OpenConnection();
             using var command = new NpgsqlCommand(
@@ -45,6 +46,29 @@ public class UserRepository
                         interests text[] NOT NULL);
                     """, connection);
             using var reader = command.ExecuteReader();
+
+            // Connections must be different for each request, because there is no support multiple commands.
+            using var connectionFriends = _databaseSelector.GetDatabase().OpenConnection();
+            using var commandFriends = new NpgsqlCommand(
+                """
+                    CREATE TABLE IF NOT EXISTS friends (
+                        user_id text,
+                        friend_id text,
+                        PRIMARY KEY(user_id, friend_id));
+                    """, connectionFriends);
+            using var readerFriends = commandFriends.ExecuteReader();
+
+            // postgre numeric datatypes https://www.postgresql.org/docs/current/datatype-numeric.html
+            using var connectionPosts = _databaseSelector.GetDatabase().OpenConnection();
+            using var commandPosts = new NpgsqlCommand(
+                """
+                    CREATE TABLE IF NOT EXISTS posts (
+                        post_id serial,
+                        author_id text NULL,
+                        content text,
+                        PRIMARY KEY(post_id));
+                    """, connectionPosts);
+            using var readerPosts = commandPosts.ExecuteReader();
 
             //https://www.postgresql.org/docs/current/sql-insert.html
 
@@ -104,6 +128,251 @@ public class UserRepository
         using var reader = command.ExecuteReader();
 
         return user.Id;
+    }
+
+    public string AddFriend(string userId, string friendId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            INSERT INTO friends (user_id, friend_id)
+            VALUES (@user_id, @friend_id)
+            ON CONFLICT (user_id, friend_id) DO NOTHING;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("friend_id", friendId);
+        using var reader = command.ExecuteReader();
+
+        return $"{userId}:{friendId}";
+    }
+
+    public string DeleteFriend(string userId, string friendId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            DELETE FROM friends
+            WHERE user_id = @user_id AND friend_id = @friend_id;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("friend_id", friendId);
+        using var reader = command.ExecuteReader();
+
+        return $"{userId}:{friendId}";
+    }
+
+    public IEnumerable<string> GetFriendIds(string userId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT user_id
+            FROM public.friends
+            WHERE friend_id = @friend_id;
+            """, connection);
+        command.Parameters.AddWithValue("friend_id", userId);
+        using var reader = command.ExecuteReader();
+
+        var posts = new List<string>();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                posts.Add(reader["user_id"].ToString());
+            }
+        }
+        return posts;
+    }
+
+    public IEnumerable<PostEntity> GetPosts(string userId, int limit, int offset = 0)
+    {
+        if (limit < 1)
+        {
+            limit = 1;
+        }
+        if (offset < 0)
+        {
+            offset = 0;
+        }
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT *
+            FROM public.posts
+            WHERE author_id IN (
+            	SELECT friend_id
+            	FROM public.friends
+            	WHERE user_id = @user_id)
+            ORDER BY post_id DESC
+            LIMIT @limit OFFSET @offset;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("limit", limit);
+        command.Parameters.AddWithValue("offset", offset);
+        using var reader = command.ExecuteReader();
+        var posts = new List<PostEntity>();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                posts.Add(new PostEntity()
+                {
+                    PostId = int.Parse(reader["post_id"].ToString()),
+                    AuthorId = reader["author_id"].ToString(),
+                    Content = reader["content"].ToString(),
+                });
+            }
+        }
+        return posts;
+    }
+
+    public int GetPostLag(string userId, int lastPostId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT COUNT(*) as count
+            FROM public.posts
+            WHERE author_id IN (
+            	SELECT friend_id
+            	FROM public.friends
+            	WHERE user_id = @user_id) AND post_id > @post_id;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("post_id", lastPostId);
+        using var reader = command.ExecuteReader();
+        if (reader.HasRows)
+        {
+            reader.Read();
+            return int.Parse(reader["count"].ToString());
+        }
+        return 0;
+    }
+
+    public IEnumerable<PostEntity> GetMyPosts(string userId, int limit, int offset = 0)
+    {
+        if (limit < 1)
+        {
+            limit = 1;
+        }
+        if (offset < 0)
+        {
+            offset = 0;
+        }
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT *
+            FROM public.posts
+            WHERE author_id  = @user_id
+            ORDER BY post_id DESC
+            LIMIT @limit OFFSET @offset;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("limit", limit);
+        command.Parameters.AddWithValue("offset", offset);
+        using var reader = command.ExecuteReader();
+        var posts = new List<PostEntity>();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                posts.Add(new PostEntity()
+                {
+                    PostId = int.Parse(reader["post_id"].ToString()),
+                    AuthorId = reader["author_id"].ToString(),
+                    Content = reader["content"].ToString(),
+                });
+            }
+        }
+        return posts;
+    }
+
+    public PostEntity? GetPost(string userId, int postId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            SELECT *
+            FROM public.posts
+            WHERE (author_id IN (
+            	SELECT friend_id
+            	FROM public.friends
+            	WHERE user_id = @user_id) OR author_id = @user_id)
+            AND post_id = @post_id;
+            """, connection);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("post_id", postId);
+        using var reader = command.ExecuteReader();
+        var posts = new List<PostEntity>();
+        if (reader.HasRows)
+        {
+            reader.Read();
+            return new PostEntity()
+            {
+                PostId = int.Parse(reader["post_id"].ToString()),
+                AuthorId = reader["author_id"].ToString(),
+                Content = reader["content"].ToString(),
+            };
+        }
+        return null;
+    }
+
+    public PostEntity? CreatePost(string userId, string content)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            INSERT INTO public.posts
+            (author_id, content)
+            VALUES(@author_id, @content) RETURNING *;
+            """, connection);
+        command.Parameters.AddWithValue("author_id", userId);
+        command.Parameters.AddWithValue("content", content);
+        using var reader = command.ExecuteReader();
+        if (reader.HasRows)
+        {
+            reader.Read();
+            return new PostEntity()
+            {
+                PostId = int.Parse(reader["post_id"].ToString()),
+                AuthorId = reader["author_id"].ToString(),
+                Content = reader["content"].ToString(),
+            };
+        }
+        return null;
+    }
+
+    public int DeletePost(string userId, int postId)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            DELETE FROM public.posts
+            WHERE author_id = @author_id AND post_id = @post_id;
+            """, connection);
+        command.Parameters.AddWithValue("author_id", userId);
+        command.Parameters.AddWithValue("post_id", postId);
+        using var reader = command.ExecuteReader();
+
+        return 1;
+    }
+
+    public int UpdatePost(string userId, int postId, string newContent)
+    {
+        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var command = new NpgsqlCommand(
+            $"""
+            UPDATE public.posts
+            SET content = @content
+            WHERE post_id = @post_id AND author_id = @author_id;
+            """, connection);
+        command.Parameters.AddWithValue("author_id", userId);
+        command.Parameters.AddWithValue("post_id", postId);
+        command.Parameters.AddWithValue("content", newContent);
+        using var reader = command.ExecuteReader();
+
+        return 1;
     }
 
     public bool VerifyPassword(string id, string password)

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 using SocialNetworkOtus.Applications.Backend.MainApi.Models;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using Swashbuckle.AspNetCore.Filters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
@@ -32,6 +33,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
+        [SwaggerRequestExample(typeof(LoginRequest), typeof(LoginRequestExample))]
         [Route("~/api/login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
@@ -82,6 +84,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             var claims = new List<Claim>
             {
                 //new Claim(ClaimTypes.Name, userId),
+                new Claim(ClaimTypes.Name, userId),
             };
 
             var token = new JwtSecurityToken(
@@ -93,6 +96,8 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             );
 
             return token;
+
+            
         }
     }
 }
