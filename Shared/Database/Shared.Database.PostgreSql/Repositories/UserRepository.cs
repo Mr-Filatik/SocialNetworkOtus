@@ -72,29 +72,29 @@ public class UserRepository
 
             //https://www.postgresql.org/docs/current/sql-insert.html
 
-            Add(new UserEntity()
-            {
-                Id = "e0c8b889-d677-4e10-9d9b-cd202a113bda",
-                FirstName = "Vladislav",
-                SecondName = "Filatov",
-                PasswordHash = "password",
-                Gender = Entities.Types.Gender.Male,
-                DateOfBirth = new DateTime(2000, 1, 10),
-                City = "Saratov",
-                Interests = ["Sport", "Programming", "Psychology"],
-            });
+            //Add(new UserEntity()
+            //{
+            //    Id = "e0c8b889-d677-4e10-9d9b-cd202a113bda",
+            //    FirstName = "Vladislav",
+            //    SecondName = "Filatov",
+            //    PasswordHash = "password",
+            //    Gender = Entities.Types.Gender.Male,
+            //    DateOfBirth = new DateTime(2000, 1, 10),
+            //    City = "Saratov",
+            //    Interests = ["Sport", "Programming", "Psychology"],
+            //});
 
-            Add(new UserEntity()
-            {
-                Id = "00fc8afc-6b99-43b2-962c-7a806b0816fe",
-                FirstName = "Vladislava",
-                SecondName = "Filatova",
-                PasswordHash = "password",
-                Gender = Entities.Types.Gender.Female,
-                DateOfBirth = new DateTime(2000, 2, 20),
-                City = "Moscow",
-                Interests = ["Sport", "TV series", "Movies"]
-            });
+            //Add(new UserEntity()
+            //{
+            //    Id = "00fc8afc-6b99-43b2-962c-7a806b0816fe",
+            //    FirstName = "Vladislava",
+            //    SecondName = "Filatova",
+            //    PasswordHash = "password",
+            //    Gender = Entities.Types.Gender.Female,
+            //    DateOfBirth = new DateTime(2000, 2, 20),
+            //    City = "Moscow",
+            //    Interests = ["Sport", "TV series", "Movies"]
+            //});
         }
         catch (Exception e)
         {
@@ -104,27 +104,33 @@ public class UserRepository
 
     public string Add(UserEntity user)
     {
+
         if (string.IsNullOrEmpty(user.Id))
         {
             user.Id = Guid.NewGuid().ToString();
         }
         using var connection = _databaseSelector.GetDatabase().OpenConnection();
         var passData = HashPassword(user.PasswordHash);
+        //using var command = new NpgsqlCommand(
+        //    $"""
+        //    INSERT INTO users (user_id ,first_name, second_name, password_hash, password_salt, gender, date_of_birth, city, interests)
+        //    VALUES (@user_id, @first_name, @second_name, @password_hash, @password_salt, @gender, @date_of_birth, @city, @interests)
+        //    ON CONFLICT (user_id) DO NOTHING;
+        //    """, connection);
         using var command = new NpgsqlCommand(
             $"""
-            INSERT INTO users (user_id ,first_name, second_name, password_hash, password_salt, gender, date_of_birth, city, interests)
-            VALUES (@user_id, @first_name, @second_name, @password_hash, @password_salt, @gender, @date_of_birth, @city, @interests)
-            ON CONFLICT (user_id) DO NOTHING;
+            INSERT INTO users (first_name, second_name, birth_date, city)
+            VALUES (@first_name, @second_name, @birth_date, @city);
             """, connection);
-        command.Parameters.AddWithValue("user_id", user.Id);
+        //command.Parameters.AddWithValue("user_id", user.Id);
         command.Parameters.AddWithValue("first_name", user.FirstName);
         command.Parameters.AddWithValue("second_name", user.SecondName);
-        command.Parameters.AddWithValue("password_hash", passData.passwordHash);
-        command.Parameters.AddWithValue("password_salt", passData.passwordSalt);
-        command.Parameters.AddWithValue("gender", (user.Gender == Entities.Types.Gender.Male));
-        command.Parameters.AddWithValue("date_of_birth", user.DateOfBirth.Date);
+        //command.Parameters.AddWithValue("password_hash", passData.passwordHash);
+        //command.Parameters.AddWithValue("password_salt", passData.passwordSalt);
+        //command.Parameters.AddWithValue("gender", (user.Gender == Entities.Types.Gender.Male));
+        command.Parameters.AddWithValue("birth_date", user.DateOfBirth.Date);
         command.Parameters.AddWithValue("city", user.City);
-        command.Parameters.AddWithValue("interests", user.Interests);
+        //command.Parameters.AddWithValue("interests", user.Interests);
         using var reader = command.ExecuteReader();
 
         return user.Id;
@@ -416,7 +422,7 @@ public class UserRepository
 
     public IEnumerable<UserEntity> Search(string firstNamePart, string secondNamePart)
     {
-        using var connection = _databaseSelector.GetDatabase().OpenConnection();
+        using var connection = _databaseSelector.GetDatabase(true).OpenConnection();
         using var command = new NpgsqlCommand(
             $"""
             SELECT *
@@ -433,15 +439,15 @@ public class UserRepository
             {
                 users.Add(new UserEntity()
                 {
-                    Id = reader["user_id"].ToString(),
+                    Id = reader["id"].ToString(),
                     FirstName = reader["first_name"].ToString(),
                     SecondName = reader["second_name"].ToString(),
-                    Gender = bool.Parse(reader["gender"].ToString()) ? Entities.Types.Gender.Male : Entities.Types.Gender.Female,
-                    DateOfBirth = DateTime.Parse(reader["date_of_birth"].ToString()),
-                    PasswordHash = reader["password_hash"].ToString(), //dont return ?
-                    PasswordSalt = reader["password_salt"].ToString(), //dont return ?
+                    //Gender = bool.Parse(reader["gender"].ToString()) ? Entities.Types.Gender.Male : Entities.Types.Gender.Female,
+                    DateOfBirth = DateTime.Parse(reader["birth_date"].ToString()),
+                    //PasswordHash = reader["password_hash"].ToString(), //dont return ?
+                    //PasswordSalt = reader["password_salt"].ToString(), //dont return ?
                     City = reader["city"].ToString(),
-                    Interests = reader["interests"] as string[],
+                    //Interests = reader["interests"] as string[],
                 });
             }
         }

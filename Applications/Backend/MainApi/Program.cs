@@ -22,7 +22,10 @@ public class Program
 
         var postgreOptions = new PostgreOptions()
         {
-            ConnectionString = builder.Configuration.GetConnectionString(PostgreOptions.SectionName)
+            MasterConnectionString = builder.Configuration.GetConnectionString(PostgreOptions.MasterSectionName),
+            ReplicaConnectionStrings = [
+                builder.Configuration.GetConnectionString(PostgreOptions.ReplicaSectionName + "One"),
+                builder.Configuration.GetConnectionString(PostgreOptions.ReplicaSectionName + "Two")]
         };
         builder.Services.AddSingleton(postgreOptions);
         builder.Services.AddSingleton<PostgreDatabaseSelector>();
