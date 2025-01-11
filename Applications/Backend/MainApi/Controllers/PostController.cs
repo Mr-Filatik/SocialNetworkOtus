@@ -27,7 +27,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             _cacher = cacher;
         }
 
-        [HttpPut("feed")]
+        [HttpGet("feed")]
         [ProducesResponseType<PostFeedResponse>(StatusCodes.Status200OK)]
         [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
@@ -91,7 +91,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
             }
         }
 
-        [HttpPut("my-feed")]
+        [HttpGet("my-feed")]
         [ProducesResponseType<PostFeedResponse>(StatusCodes.Status200OK)]
         [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]

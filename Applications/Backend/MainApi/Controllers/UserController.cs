@@ -63,6 +63,7 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         }
 
         [HttpGet("search")]
+        [AllowAnonymous]
         [ProducesResponseType<UserGetResponse[]>(StatusCodes.Status200OK)]
         [ProducesResponseType<MessageResponse>(StatusCodes.Status404NotFound)]
         [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
