@@ -21,22 +21,22 @@ public class PostgreDatabaseSelector
 
     public NpgsqlDataSource GetDatabase(bool onlyRead = false)
     {
-        if (onlyRead)
-        {
-            if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)
-            {
-                _dataReplicaSources = new List<NpgsqlDataSource>();
-                foreach (var conn in _options.ReplicaConnectionStrings)
-                {
-                    _dataReplicaSources.Add(NpgsqlDataSource.Create(conn));
-                }
-            }
+        //if (onlyRead)
+        //{
+        //    if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)
+        //    {
+        //        _dataReplicaSources = new List<NpgsqlDataSource>();
+        //        foreach (var conn in _options.ReplicaConnectionStrings)
+        //        {
+        //            _dataReplicaSources.Add(NpgsqlDataSource.Create(conn));
+        //        }
+        //    }
 
-            var currentSource = _dataReplicaSources[_replicaIndex];
-            //_logger.LogInformation($"Get replica connection {currentSource.ConnectionString}");
-            _replicaIndex = (_replicaIndex + 1) % _dataReplicaSources.Count;
-            return currentSource;
-        }
+        //    var currentSource = _dataReplicaSources[_replicaIndex];
+        //    //_logger.LogInformation($"Get replica connection {currentSource.ConnectionString}");
+        //    _replicaIndex = (_replicaIndex + 1) % _dataReplicaSources.Count;
+        //    return currentSource;
+        //}
 
         if (_dataMasterSource is null)
         {
