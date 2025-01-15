@@ -30,6 +30,7 @@ public class Program
         builder.Services.AddSingleton(postgreOptions);
         builder.Services.AddSingleton<PostgreDatabaseSelector>();
         builder.Services.AddSingleton<UserRepository>();
+        builder.Services.AddSingleton<MessageRepository>();
 
         builder.Services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -100,6 +101,8 @@ public class Program
         //initing services
         var userRepository = app.Services.GetRequiredService<UserRepository>();
         userRepository.Init();
+        var messageRepository = app.Services.GetRequiredService<MessageRepository>();
+        messageRepository.Init();
 
         app.Services.InitRedisCache(app.Configuration["RedisOptions:Endpoint"]);
 
