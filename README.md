@@ -13,8 +13,10 @@ Go to the project folder in the console.
 Run docker container.
 
 ```console
-docker-compose up
+docker-compose up -d --force-recreate --build backend
 ```
+
+In postgres volumes in file pg_hba.conf add `host replication all 172.21.0.0/16 trust` for allow connection, and restart containers.
 
 Wait 5-7 seconds for the application to start and initialize.
 

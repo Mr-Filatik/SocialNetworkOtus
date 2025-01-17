@@ -8,6 +8,8 @@ using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration.Options;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi;
 
@@ -17,20 +19,9 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        //builder.Services.AddSingleton(builder.Configuration);
+        IConfiguration config = builder.Configuration;
 
-        var postgreOptions = new PostgreOptions()
-        {
-            MasterConnectionString = builder.Configuration.GetConnectionString(PostgreOptions.MasterSectionName),
-            ReplicaConnectionStrings = [
-                builder.Configuration.GetConnectionString(PostgreOptions.ReplicaSectionName + "One"),
-                builder.Configuration.GetConnectionString(PostgreOptions.ReplicaSectionName + "Two")]
-        };
-        builder.Services.AddSingleton(postgreOptions);
-        builder.Services.AddSingleton<PostgreDatabaseSelector>();
-        builder.Services.AddSingleton<UserRepository>();
-        builder.Services.AddSingleton<MessageRepository>();
+        builder.Services.AddPostgres(config);
 
         builder.Services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -99,10 +90,7 @@ public class Program
         Thread.Sleep(5000);
 
         //initing services
-        var userRepository = app.Services.GetRequiredService<UserRepository>();
-        userRepository.Init();
-        var messageRepository = app.Services.GetRequiredService<MessageRepository>();
-        messageRepository.Init();
+        app.Services.InitPostgresDatabases();
 
         app.Services.InitRedisCache(app.Configuration["RedisOptions:Endpoint"]);
 

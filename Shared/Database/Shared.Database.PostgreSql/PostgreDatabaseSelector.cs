@@ -10,10 +10,10 @@ public class PostgreDatabaseSelector
     private List<NpgsqlDataSource> _dataReplicaSources;
     private int _replicaIndex = 0;
 
-    private readonly PostgreOptions _options;
+    private readonly PostgresOptions _options;
     private readonly ILogger<PostgreDatabaseSelector> _logger;
 
-    public PostgreDatabaseSelector(PostgreOptions options, ILogger<PostgreDatabaseSelector> logger)
+    public PostgreDatabaseSelector(PostgresOptions options, ILogger<PostgreDatabaseSelector> logger)
     {
         _options = options;
         _logger = logger;
@@ -21,22 +21,22 @@ public class PostgreDatabaseSelector
 
     public NpgsqlDataSource GetDatabase(bool onlyRead = false)
     {
-        //if (onlyRead)
-        //{
-        //    if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)
-        //    {
-        //        _dataReplicaSources = new List<NpgsqlDataSource>();
-        //        foreach (var conn in _options.ReplicaConnectionStrings)
-        //        {
-        //            _dataReplicaSources.Add(NpgsqlDataSource.Create(conn));
-        //        }
-        //    }
+        if (onlyRead)
+        {
+            if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)
+            {
+                _dataReplicaSources = new List<NpgsqlDataSource>();
+                foreach (var conn in _options.ReplicaConnectionStrings)
+                {
+                    _dataReplicaSources.Add(NpgsqlDataSource.Create(conn));
+                }
+            }
 
-        //    var currentSource = _dataReplicaSources[_replicaIndex];
-        //    //_logger.LogInformation($"Get replica connection {currentSource.ConnectionString}");
-        //    _replicaIndex = (_replicaIndex + 1) % _dataReplicaSources.Count;
-        //    return currentSource;
-        //}
+            var currentSource = _dataReplicaSources[_replicaIndex];
+            //_logger.LogInformation($"Get replica connection {currentSource.ConnectionString}");
+            _replicaIndex = (_replicaIndex + 1) % _dataReplicaSources.Count;
+            return currentSource;
+        }
 
         if (_dataMasterSource is null)
         {

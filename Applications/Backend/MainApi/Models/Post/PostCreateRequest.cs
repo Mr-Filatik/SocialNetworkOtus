@@ -1,6 +1,6 @@
 ﻿namespace SocialNetworkOtus.Applications.Backend.MainApi.Models;
 
-public class LoginResponse
+public class PostCreateRequest
 {
-    public string Token { get; set; }
+    public string Content { get; set; }
 }
