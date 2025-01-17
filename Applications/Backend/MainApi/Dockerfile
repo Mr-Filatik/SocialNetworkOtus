@@ -7,12 +7,12 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Applications/Backend/MainApi/MainApi.csproj", "Applications/Backend/MainApi/"]
+COPY ["Shared/Cache/Shared.Cache.Redis/Shared.Cache.Redis.csproj", "Shared/Cache/Shared.Cache.Redis/"]
 COPY ["Shared/Database/Shared.Database.Entities/Shared.Database.Entities.csproj", "Shared/Database/Shared.Database.Entities/"]
 COPY ["Shared/Database/Shared.Database.PostgreSql/Shared.Database.PostgreSql.csproj", "Shared/Database/Shared.Database.PostgreSql/"]
 RUN dotnet restore "./Applications/Backend/MainApi/MainApi.csproj"

@@ -1,7 +1,4 @@
-﻿using SocialNetworkOtus.Shared.Database.Entities.Types;
-using SocialNetworkOtus.Shared.Database.Entities;
-
-namespace SocialNetworkOtus.Applications.Backend.MainApi.Models;
+﻿namespace SocialNetworkOtus.Applications.Backend.MainApi.Models;
 
 public class UserRegisterRequest
 {
