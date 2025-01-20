@@ -15,13 +15,19 @@ public class LoginRequestExample : IMultipleExamplesProvider<AuthLoginRequest>
     {
         yield return SwaggerExample.Create("First user", new AuthLoginRequest()
         {
-            Id = "e0c8b889-d677-4e10-9d9b-cd202a113bda",
+            Id = "11111111-1111-1111-1111-111111111111",
             Password = "password",
         });
 
         yield return SwaggerExample.Create("Second user", new AuthLoginRequest()
         {
-            Id = "00fc8afc-6b99-43b2-962c-7a806b0816fe",
+            Id = "22222222-2222-2222-2222-222222222222",
+            Password = "password",
+        });
+
+        yield return SwaggerExample.Create("Third user", new AuthLoginRequest()
+        {
+            Id = "33333333-3333-3333-3333-333333333333",
             Password = "password",
         });
     }

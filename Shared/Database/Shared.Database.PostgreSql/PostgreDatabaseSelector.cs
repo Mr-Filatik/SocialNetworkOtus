@@ -8,7 +8,9 @@ public class PostgreDatabaseSelector
 {
     private NpgsqlDataSource _dataMasterSource;
     private List<NpgsqlDataSource> _dataReplicaSources;
+    private List<NpgsqlDataSource> _dataShardSources;
     private int _replicaIndex = 0;
+    private int _shardIndex = 0;
 
     private readonly PostgresOptions _options;
     private readonly ILogger<PostgreDatabaseSelector> _logger;
@@ -19,8 +21,24 @@ public class PostgreDatabaseSelector
         _logger = logger;
     }
 
-    public NpgsqlDataSource GetDatabase(bool onlyRead = false)
+    public NpgsqlDataSource GetDatabase(bool onlyRead = false, bool withSharding = false)
     {
+        if (withSharding)
+        {
+            if (_dataShardSources == null || _dataShardSources.Count == 0)
+            {
+                _dataShardSources = new List<NpgsqlDataSource>();
+                foreach (var conn in _options.ShardConnectionStrings)
+                {
+                    _dataShardSources.Add(NpgsqlDataSource.Create(conn));
+                }
+            }
+
+            var currentSource = _dataShardSources[_shardIndex];
+            _shardIndex = (_shardIndex + 1) % _dataShardSources.Count;
+            return currentSource;
+        }
+
         if (onlyRead)
         {
             if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)

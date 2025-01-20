@@ -68,7 +68,7 @@ public class UserRepository
 
             Add(new UserEntity()
             {
-                Id = "e0c8b889-d677-4e10-9d9b-cd202a113bda",
+                Id = "11111111-1111-1111-1111-111111111111",
                 FirstName = "Vladislav",
                 SecondName = "Filatov",
                 PasswordHash = "password",
@@ -80,11 +80,23 @@ public class UserRepository
 
             Add(new UserEntity()
             {
-                Id = "00fc8afc-6b99-43b2-962c-7a806b0816fe",
+                Id = "22222222-2222-2222-2222-222222222222",
                 FirstName = "Vladislava",
                 SecondName = "Filatova",
                 PasswordHash = "password",
                 Gender = Entities.Types.Gender.Female,
+                DateOfBirth = new DateTime(2000, 2, 20),
+                City = "Moscow",
+                Interests = ["Sport", "TV series", "Movies"]
+            });
+
+            Add(new UserEntity()
+            {
+                Id = "33333333-3333-3333-3333-333333333333",
+                FirstName = "Vladimir",
+                SecondName = "Antonov",
+                PasswordHash = "password",
+                Gender = Entities.Types.Gender.Male,
                 DateOfBirth = new DateTime(2000, 2, 20),
                 City = "Moscow",
                 Interests = ["Sport", "TV series", "Movies"]

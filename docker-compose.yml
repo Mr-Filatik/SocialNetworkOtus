@@ -11,9 +11,9 @@ services:
     restart: always
     environment:
       PGPORT: 5434
-      POSTGRES_DB: "main_db"
-      POSTGRES_USER: "main_user"
-      POSTGRES_PASSWORD: "main_password"
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
     networks:
       - dev
 
@@ -42,12 +42,15 @@ services:
       context: .
       dockerfile: Applications/Backend/MainApi/Dockerfile
     environment:
-      - Postgres__ConnectionStrings__Master=Username=main_user;Password=main_password;Server=postgres;Port=5434;Database=main_db;
-      - Postgres__ConnectionStrings__Replicas__0=Username=main_user;Password=main_password;Server=postgres;Port=5434;Database=main_db;
-      - Postgres__ConnectionStrings__Replicas__1=Username=main_user;Password=main_password;Server=postgres;Port=5434;Database=main_db;
+      - Postgres__ConnectionStrings__Master=Username=postgres;Password=password;Server=postgres;Port=5432;Database=postgres;
+      - Postgres__ConnectionStrings__Replicas__0=Username=postgres;Password=password;Server=postgres;Port=5432;Database=postgres;
+      - Postgres__ConnectionStrings__Replicas__1=Username=postgres;Password=password;Server=postgres;Port=5432;Database=postgres;
+      - Postgres__ConnectionStrings__Shards__0=Username=postgres;Password=password;Server=postgres;Port=5432;Database=postgres;
       - RedisOptions__Endpoint=redis:6380
     networks:
       - dev
+
+
 
 networks:
   dev:

@@ -17,6 +17,7 @@ public static class PostgresServiceCollectionExtensions
         {
             MasterConnectionString = configuration.GetSection("Postgres:ConnectionStrings:Master").Value,
             ReplicaConnectionStrings = configuration.GetSection("Postgres:ConnectionStrings:Replicas").Get<string[]>(),
+            ShardConnectionStrings = configuration.GetSection("Postgres:ConnectionStrings:Shards").Get<string[]>(),
         };
         options?.Invoke(postgreOptions);
         services.AddSingleton(postgreOptions);
