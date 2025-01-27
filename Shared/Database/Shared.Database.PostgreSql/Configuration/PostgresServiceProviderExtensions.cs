@@ -11,7 +11,7 @@ public static class PostgresServiceProviderExtensions
     {
         var userRepository = services.GetRequiredService<UserRepository>();
         userRepository.Init();
-        var messageRepository = services.GetRequiredService<MessageRepository>();
+        var messageRepository = services.GetRequiredService<IMessageRepository>();
         messageRepository.Init();
     }
 }

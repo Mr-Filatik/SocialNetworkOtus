@@ -24,6 +24,8 @@ public static class PostgresServiceCollectionExtensions
 
         services.AddSingleton<PostgreDatabaseSelector>();
         services.AddSingleton<UserRepository>();
-        services.AddSingleton<MessageRepository>();
+
+        //services.AddSingleton<IMessageRepository, MessageRepository>();
+        services.AddSingleton<IMessageRepository, MessageLuaRepository>();
     }
 }
