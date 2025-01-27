@@ -13,12 +13,12 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers;
 public class DialogController : ControllerBase
 {
     private readonly ILogger<DialogController> _logger;
-    private readonly MessageRepository _messageRepository;
+    private readonly IMessageRepository _messageRepository;
     private readonly UserRepository _userRepository;
 
     public DialogController(
         ILogger<DialogController> logger,
-        MessageRepository messageRepository,
+        IMessageRepository messageRepository,
         UserRepository userRepository)
     {
         _logger = logger;

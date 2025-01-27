@@ -4,9 +4,9 @@ using SocialNetworkOtus.Shared.Database.Entities;
 
 namespace SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 
-public class MessageRepository
+public class MessageRepository : IMessageRepository
 {
-    private readonly int _limit = 20;
+    private readonly int _limit = 100;
 
     private readonly PostgreDatabaseSelector _databaseSelector;
     private readonly ILogger<MessageRepository> _logger;
@@ -69,6 +69,7 @@ public class MessageRepository
             """, connection);
         command.Parameters.AddWithValue("from_to_hash", fromToHash);
         command.Parameters.AddWithValue("limit", _limit);
+
         return GetList(command);
     }
 
@@ -88,6 +89,7 @@ public class MessageRepository
         command.Parameters.AddWithValue("from_to_hash", fromToHash);
         command.Parameters.AddWithValue("newest", newest);
         command.Parameters.AddWithValue("limit", _limit);
+
         return GetList(command);
     }
 
@@ -107,6 +109,7 @@ public class MessageRepository
         command.Parameters.AddWithValue("from_to_hash", fromToHash);
         command.Parameters.AddWithValue("oldest", oldest);
         command.Parameters.AddWithValue("limit", _limit);
+
         return GetList(command);
     }
 
@@ -127,6 +130,7 @@ public class MessageRepository
         command.Parameters.AddWithValue("newest", newest);
         command.Parameters.AddWithValue("oldest", oldest);
         command.Parameters.AddWithValue("limit", _limit);
+
         return GetList(command);
     }
 
