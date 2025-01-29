@@ -6,6 +6,8 @@ using SocialNetworkOtus.Applications.Backend.MainApi.Models;
 using SocialNetworkOtus.Shared.Cache.Redis;
 using SocialNetworkOtus.Shared.Database.Entities;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using SocialNetworkOtus.Shared.Event.Kafka;
+using SocialNetworkOtus.Shared.Event.Kafka.Events;
 using System.Collections.Generic;
 using System.Security.Claims;
 
@@ -19,12 +21,14 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
         private readonly ILogger<PostController> _logger;
         private readonly UserRepository _userRepository;
         private readonly ICacher _cacher;
+        private readonly IKafkaProducer<string, PostCreatedEvent> _producer;
 
-        public PostController(ILogger<PostController> logger, UserRepository userRepository, ICacher cacher)
+        public PostController(ILogger<PostController> logger, UserRepository userRepository, ICacher cacher, IKafkaProducer<string, PostCreatedEvent> producer)
         {
             _logger = logger;
             _userRepository = userRepository;
             _cacher = cacher;
+            _producer = producer;
         }
 
         [HttpGet("feed")]
@@ -175,6 +179,13 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
                         _cacher.SetPosts(friend, new List<PostEntity>() { post });
                     }
                 }
+
+                _producer.Produce(new PostCreatedEvent()
+                {
+                    Content = post.Content,
+                    CreatedTime = DateTime.Now,
+                    AuthorId = post.AuthorId,
+                });
 
                 return Ok(new MessageResponse()
                 {

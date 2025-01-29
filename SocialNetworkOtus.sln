@@ -25,6 +25,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cache", "Cache", "{F1FA7F2F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Cache.Redis", "Shared\Cache\Shared.Cache.Redis\Shared.Cache.Redis.csproj", "{872CD392-5AB4-4D03-98DB-BE500D42399C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Event", "Event", "{51B63DCE-4CAA-4DFB-8209-65AB9F76C5B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Event.Kafka", "Shared\Event\Shared.Event.Kafka\Shared.Event.Kafka.csproj", "{6DD2E7ED-A67E-4D76-8DFF-1E172E6A2C9E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,10 @@ Global
 		{872CD392-5AB4-4D03-98DB-BE500D42399C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{872CD392-5AB4-4D03-98DB-BE500D42399C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{872CD392-5AB4-4D03-98DB-BE500D42399C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DD2E7ED-A67E-4D76-8DFF-1E172E6A2C9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DD2E7ED-A67E-4D76-8DFF-1E172E6A2C9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DD2E7ED-A67E-4D76-8DFF-1E172E6A2C9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DD2E7ED-A67E-4D76-8DFF-1E172E6A2C9E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,6 +72,8 @@ Global
 		{120C5C2A-E0C8-427D-847C-3358C6364D35} = {BFCC82BE-0F23-444F-8C3A-4D1E22CFDB8F}
 		{F1FA7F2F-5326-4B09-A8ED-A695AB3A6A94} = {5289A84C-519E-4BB5-96FE-037A18B44060}
 		{872CD392-5AB4-4D03-98DB-BE500D42399C} = {F1FA7F2F-5326-4B09-A8ED-A695AB3A6A94}
+		{51B63DCE-4CAA-4DFB-8209-65AB9F76C5B2} = {5289A84C-519E-4BB5-96FE-037A18B44060}
+		{6DD2E7ED-A67E-4D76-8DFF-1E172E6A2C9E} = {51B63DCE-4CAA-4DFB-8209-65AB9F76C5B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32BAA331-BA11-4F6F-8EC2-89C78964153E}

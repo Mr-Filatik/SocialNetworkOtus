@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration;
 using Microsoft.Extensions.Configuration;
+using SocialNetworkOtus.Shared.Event.Kafka.Configuration;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi;
 
@@ -84,6 +85,8 @@ public class Program
         builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>(); // to automatically search all the example from assembly.
 
         builder.Services.AddRedisCache();
+
+        builder.Services.AddKafkaEvent();
 
         var app = builder.Build();
 
