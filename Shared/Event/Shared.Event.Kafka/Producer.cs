@@ -15,7 +15,7 @@ public class Producer<KT, EventType> : IKafkaProducer<KT, EventType>
 
     public Producer(ILogger<Producer<KT, EventType>> logger)
     {
-        _logger = _logger ?? throw new ArgumentNullException();
+        _logger = logger ?? throw new ArgumentNullException();
     }
 
     public void Init()

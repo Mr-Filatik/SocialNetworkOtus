@@ -172,16 +172,17 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers
 
                 var friends = _userRepository.GetFriendIds(currentUserId);
 
-                foreach (var friend in friends)
-                {
-                    if (_cacher.IsPosts(friend))
-                    {
-                        _cacher.SetPosts(friend, new List<PostEntity>() { post });
-                    }
-                }
+                //foreach (var friend in friends)
+                //{
+                //    if (_cacher.IsPosts(friend))
+                //    {
+                //        _cacher.SetPosts(friend, new List<PostEntity>() { post });
+                //    }
+                //}
 
                 _producer.Produce(new PostCreatedEvent()
                 {
+                    PostId = post.PostId,
                     Content = post.Content,
                     CreatedTime = DateTime.Now,
                     AuthorId = post.AuthorId,

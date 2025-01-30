@@ -94,8 +94,11 @@ public class Program
 
         //initing services
         app.Services.InitPostgresDatabases();
+        app.Services.InitKafkaEvent();
 
         app.Services.InitRedisCache(app.Configuration["RedisOptions:Endpoint"]);
+
+        app.UseWebSockets();
 
         // Configure the HTTP request pipeline.
         //if (app.Environment.IsDevelopment())

@@ -12,4 +12,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Database\Shared.Database.Entities\Shared.Database.Entities.csproj" />
+    <ProjectReference Include="..\..\Database\Shared.Database.PostgreSql\Shared.Database.PostgreSql.csproj" />
+  </ItemGroup>
+
 </Project>
