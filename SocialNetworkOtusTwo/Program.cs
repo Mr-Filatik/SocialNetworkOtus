@@ -1,17 +1,14 @@
-﻿using System.Net.WebSockets;
-using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using SocialNetworkOtus.Shared.Database.Entities;
+using System.Net.WebSockets;
 using System.Text.Json;
-using SocialNetworkOtus.Shared.Database.Entities;
-using System;
 
-namespace SocialNetworkOtus
+namespace SocialNetworkOtusTwo
 {
     internal class Program
     {
         static async Task Main(string[] args)
         {
-            var clientId = "11111111-1111-1111-1111-111111111111";
+            var clientId = "22222222-2222-2222-2222-222222222222";
             Console.WriteLine($"Hello, {clientId}!");
 
             Console.ReadKey();

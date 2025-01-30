@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration;
 using Microsoft.Extensions.Configuration;
+using SocialNetworkOtus.Shared.Event.Kafka.Configuration;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi;
 
@@ -85,14 +86,19 @@ public class Program
 
         builder.Services.AddRedisCache();
 
+        builder.Services.AddKafkaEvent();
+
         var app = builder.Build();
 
         Thread.Sleep(5000);
 
         //initing services
         app.Services.InitPostgresDatabases();
+        app.Services.InitKafkaEvent();
 
         app.Services.InitRedisCache(app.Configuration["RedisOptions:Endpoint"]);
+
+        app.UseWebSockets();
 
         // Configure the HTTP request pipeline.
         //if (app.Environment.IsDevelopment())

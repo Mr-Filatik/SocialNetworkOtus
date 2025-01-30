@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\..\Shared\Cache\Shared.Cache.Redis\Shared.Cache.Redis.csproj" />
     <ProjectReference Include="..\..\..\Shared\Database\Shared.Database.Entities\Shared.Database.Entities.csproj" />
     <ProjectReference Include="..\..\..\Shared\Database\Shared.Database.PostgreSql\Shared.Database.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Event\Shared.Event.Kafka\Shared.Event.Kafka.csproj" />
   </ItemGroup>
 
 </Project>
