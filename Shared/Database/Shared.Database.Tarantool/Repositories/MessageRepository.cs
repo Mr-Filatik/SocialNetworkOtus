@@ -1,18 +1,19 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProGaudi.Tarantool.Client;
 using ProGaudi.Tarantool.Client.Model;
+using Shared.Database.Abstract;
 using SocialNetworkOtus.Shared.Database.Entities;
 
-namespace SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+namespace SocialNetworkOtus.Shared.Database.Tarantool.Repositories;
 
-public class MessageLuaRepository : IMessageRepository
+public class MessageRepository : IMessageRepository
 {
     private readonly int _limit = 100;
     private Box _client;
 
     private readonly ILogger<MessageRepository> _logger;
 
-    public MessageLuaRepository(ILogger<MessageRepository> logger)
+    public MessageRepository(ILogger<MessageRepository> logger)
     {
         _logger = logger;
     }

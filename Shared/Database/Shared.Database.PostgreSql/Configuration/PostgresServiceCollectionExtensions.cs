@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shared.Database.Abstract;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration.Options;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 

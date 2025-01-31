@@ -1,43 +1,53 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Database.Abstract;
-using SocialNetworkOtus.Applications.Backend.MainApi.Models;
+using SocialNetworkOtus.Applications.Backend.DialogApi.Models;
 using SocialNetworkOtus.Shared.Database.Entities;
-using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 
-namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers;
+namespace SocialNetworkOtus.Applications.Backend.DialogApi.Controllers;
 
 [ApiController]
 [Authorize]
 [Route("api/dialog")]
 public class DialogController : ControllerBase
 {
+    private string _userServicePath = "";
+
     private readonly ILogger<DialogController> _logger;
     private readonly IMessageRepository _messageRepository;
-    private readonly UserRepository _userRepository;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public DialogController(
         ILogger<DialogController> logger,
         IMessageRepository messageRepository,
-        UserRepository userRepository)
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _messageRepository = messageRepository;
-        _userRepository = userRepository;
+        _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpPost("{userId}/send")]
     [ProducesResponseType<MessageResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
-    public IActionResult Send(string userId, [FromBody] DialogSendRequest request)
+    public async Task<IActionResult> Send(string userId, [FromBody] DialogSendRequest request)
     {
         try
         {
             var currentUserId = GetCurrentUserId();
 
-            if (!ValidateUserId(userId) || !ValidateUserId(currentUserId))
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var valUser = ValidateUserId(userId, token);
+            var valCurrentUser = ValidateUserId(currentUserId, token);
+            var res = await Task.WhenAll(valUser, valCurrentUser);
+
+            if (res != null && res.Any(x => !x))
             {
                 return BadRequest(new MessageResponse()
                 {
@@ -70,13 +80,18 @@ public class DialogController : ControllerBase
     [ProducesResponseType<DialogListResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
-    public IActionResult List(string userId, [FromBody] DialogListRequest request)
+    public async Task<IActionResult> List(string userId, [FromBody] DialogListRequest request)
     {
         try
         {
             var currentUserId = GetCurrentUserId();
 
-            if (!ValidateUserId(userId) || !ValidateUserId(currentUserId))
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var valUser = ValidateUserId(userId, token);
+            var valCurrentUser = ValidateUserId(currentUserId, token);
+            var res = await Task.WhenAll(valUser, valCurrentUser);
+
+            if (res != null && res.Any(x => !x))
             {
                 return BadRequest(new MessageResponse()
                 {
@@ -146,10 +161,33 @@ public class DialogController : ControllerBase
         return claim.Value;
     }
 
-    private bool ValidateUserId(string userId)
+    private async Task<bool> ValidateUserId(string userId, string token)
     {
-        var user = _userRepository.Get(userId);
-        return user != null;
+        //mb adding cache for validated user
+
+        if (string.IsNullOrEmpty(_userServicePath))
+        {
+            _userServicePath = _configuration.GetConnectionString("UserService");
+        }
+        var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"{_userServicePath}/get/{userId}"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        try
+        {
+            using (var client = _httpClientFactory.CreateClient())
+            {
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation($"Response status = {response.StatusCode}.");
+                return response.StatusCode == System.Net.HttpStatusCode.OK;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Validate user by ID error.");
+            return false;
+        }
     }
 
     #endregion
