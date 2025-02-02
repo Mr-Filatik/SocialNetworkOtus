@@ -12,24 +12,22 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Applications/Backend/MainApi/MainApi.csproj", "Applications/Backend/MainApi/"]
-COPY ["Shared/Cache/Shared.Cache.Redis/Shared.Cache.Redis.csproj", "Shared/Cache/Shared.Cache.Redis/"]
+COPY ["Applications/Backend/DialogApi/DialogApi.csproj", "Applications/Backend/DialogApi/"]
 COPY ["Shared/Database/Shared.Database.Entities/Shared.Database.Entities.csproj", "Shared/Database/Shared.Database.Entities/"]
-COPY ["Shared/Database/Shared.Database.PostgreSql/Shared.Database.PostgreSql.csproj", "Shared/Database/Shared.Database.PostgreSql/"]
+COPY ["Shared/Database/Shared.Database.Tarantool/Shared.Database.Tarantool.csproj", "Shared/Database/Shared.Database.Tarantool/"]
 COPY ["Shared/Database/Shared.Database.Abstract/Shared.Database.Abstract.csproj", "Shared/Database/Shared.Database.Abstract/"]
-COPY ["Shared/Event/Shared.Event.Kafka/Shared.Event.Kafka.csproj", "Shared/Event/Shared.Event.Kafka/"]
-RUN dotnet restore "./Applications/Backend/MainApi/MainApi.csproj"
+RUN dotnet restore "./Applications/Backend/DialogApi/DialogApi.csproj"
 COPY . .
-WORKDIR "/src/Applications/Backend/MainApi"
-RUN dotnet build "./MainApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/Applications/Backend/DialogApi"
+RUN dotnet build "./DialogApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./MainApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./DialogApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MainApi.dll"]
+ENTRYPOINT ["dotnet", "DialogApi.dll"]

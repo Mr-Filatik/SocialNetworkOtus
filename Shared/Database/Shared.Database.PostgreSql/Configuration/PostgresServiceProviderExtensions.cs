@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shared.Database.Abstract;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
 
 namespace SocialNetworkOtus.Shared.Database.PostgreSql.Configuration;
@@ -11,7 +12,7 @@ public static class PostgresServiceProviderExtensions
     {
         var userRepository = services.GetRequiredService<UserRepository>();
         userRepository.Init();
-        var messageRepository = services.GetRequiredService<IMessageRepository>();
-        messageRepository.Init();
+        //var messageRepository = services.GetRequiredService<IMessageRepository>();
+        //messageRepository.Init();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
+using Shared.Database.Abstract;
 using SocialNetworkOtus.Shared.Database.Entities;
 
 namespace SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;

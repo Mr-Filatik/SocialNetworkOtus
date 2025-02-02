@@ -1,6 +1,6 @@
 ﻿using SocialNetworkOtus.Shared.Database.Entities;
 
-namespace SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+namespace Shared.Database.Abstract;
 
 public interface IMessageRepository
 {

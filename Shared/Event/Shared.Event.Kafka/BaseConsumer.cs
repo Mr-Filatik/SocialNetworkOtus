@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SocialNetworkOtus.Shared.Event.Kafka.Events;
 using System.Text.RegularExpressions;
@@ -14,10 +15,12 @@ public abstract class BaseConsumer<KT, EventType> : IKafkaConsumer<KT, EventType
     protected CancellationTokenSource _tokenSource;
 
     protected readonly ILogger<BaseConsumer<KT, EventType>> _logger;
+    private readonly IConfiguration _configuration;
 
-    public BaseConsumer(ILogger<BaseConsumer<KT, EventType>> logger)
+    public BaseConsumer(ILogger<BaseConsumer<KT, EventType>> logger, IConfiguration configuration)
     {
         _logger = logger ?? throw new ArgumentNullException();
+        _configuration = configuration ?? throw new ArgumentNullException();
     }
 
     public abstract void Consume(ConsumeResult<KT, EventType>? result);
@@ -26,7 +29,7 @@ public abstract class BaseConsumer<KT, EventType> : IKafkaConsumer<KT, EventType
     {
         var config = new ConsumerConfig()
         {
-            BootstrapServers = "localhost:9092",
+            BootstrapServers = _configuration.GetSection("Kafka:BootstrapServers").Value,
             GroupId = "main-group",
             AutoOffsetReset = AutoOffsetReset.Earliest,
         };
