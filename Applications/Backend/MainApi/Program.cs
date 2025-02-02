@@ -11,6 +11,7 @@ using System.Text;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Configuration;
 using Microsoft.Extensions.Configuration;
 using SocialNetworkOtus.Shared.Event.Kafka.Configuration;
+using SocialNetworkOtus.Applications.Backend.MainApi.Middlewares;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi;
 
@@ -88,6 +89,8 @@ public class Program
 
         builder.Services.AddKafkaEvent();
 
+        builder.Services.AddHttpClient();
+
         var app = builder.Build();
 
         Thread.Sleep(5000);
@@ -113,6 +116,9 @@ public class Program
         app.UseAuthentication();
 
         app.MapControllers();
+
+        app.UseMiddleware<RequestIdMiddleware>();
+        app.UseMiddleware<TimeTrackingMiddleware>();
 
         app.Run();
     }

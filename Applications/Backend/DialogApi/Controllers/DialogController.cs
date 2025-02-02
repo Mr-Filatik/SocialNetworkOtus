@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Shared.Database.Abstract;
 using SocialNetworkOtus.Applications.Backend.DialogApi.Models;
 using SocialNetworkOtus.Shared.Database.Entities;
+using System;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 
@@ -19,17 +22,20 @@ public class DialogController : ControllerBase
     private readonly IMessageRepository _messageRepository;
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IMemoryCache _memoryCache;
 
     public DialogController(
         ILogger<DialogController> logger,
         IMessageRepository messageRepository,
         IConfiguration configuration,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        IMemoryCache memoryCache)
     {
         _logger = logger;
         _messageRepository = messageRepository;
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+        _memoryCache = memoryCache;
     }
 
     [HttpPost("{userId}/send")]
@@ -163,7 +169,12 @@ public class DialogController : ControllerBase
 
     private async Task<bool> ValidateUserId(string userId, string token)
     {
-        //mb adding cache for validated user
+        if (_memoryCache.TryGetValue<UserEntity>(userId, out var value))
+        {
+            //value.IsActive == true;
+            //Add a consumer that will change user information if they are deleted, changed
+            return true;
+        }
 
         if (string.IsNullOrEmpty(_userServicePath))
         {
@@ -180,7 +191,16 @@ public class DialogController : ControllerBase
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation($"Response status = {response.StatusCode}.");
-                return response.StatusCode == System.Net.HttpStatusCode.OK;
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var user = await response.Content.ReadFromJsonAsync<UserEntity>();
+                    _memoryCache.Set(user.Id, user, new MemoryCacheEntryOptions()
+                        .SetSize(1)
+                        .SetPriority(CacheItemPriority.High)
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
+                    return true;
+                }
+                return false;
             }
         }
         catch (Exception ex)

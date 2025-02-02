@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DialogApi.Middlewares;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace DialogApi
 {
@@ -14,6 +15,16 @@ namespace DialogApi
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            //builder.Logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
+            //or
+            //"Logging": {
+            //    "LogLevel": {
+            //        "Default": "Information",
+            //        "Microsoft.AspNetCore": "Warning",
+            //        "System.Net.Http.HttpClient": "Warning" //here
+            //    }
+            //},
 
             IConfiguration config = builder.Configuration;
 
@@ -83,14 +94,20 @@ namespace DialogApi
 
             builder.Services.AddHttpClient();
 
+            builder.Services.AddSingleton<IMemoryCache>(new MemoryCache(new MemoryCacheOptions
+            {
+                SizeLimit = 1000,
+                //TrackStatistics = true,
+            }));
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
 
             app.UseHttpsRedirection();
 
@@ -100,6 +117,7 @@ namespace DialogApi
             app.MapControllers();
 
             app.UseMiddleware<RequestIdMiddleware>();
+            app.UseMiddleware<TimeTrackingMiddleware>();
 
             app.Services.InitTarantool();
 

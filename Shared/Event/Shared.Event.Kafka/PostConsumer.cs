@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SocialNetworkOtus.Shared.Database.Entities;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
@@ -26,7 +27,7 @@ namespace SocialNetworkOtus.Shared.Event.Kafka
     {
         private readonly UserRepository _userRepository;
 
-        public PostConsumer(ILogger<PostConsumer> logger, UserRepository userRepository) : base(logger)
+        public PostConsumer(ILogger<PostConsumer> logger, IConfiguration configuration, UserRepository userRepository) : base(logger, configuration)
         {
             _userRepository = userRepository;
         }

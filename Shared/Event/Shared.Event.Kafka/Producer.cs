@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SocialNetworkOtus.Shared.Event.Kafka.Events;
 
@@ -12,17 +13,19 @@ public class Producer<KT, EventType> : IKafkaProducer<KT, EventType>
     private IProducer<KT, EventType> _producer;
 
     private readonly ILogger<Producer<KT, EventType>> _logger;
+    private readonly IConfiguration _configuration;
 
-    public Producer(ILogger<Producer<KT, EventType>> logger)
+    public Producer(ILogger<Producer<KT, EventType>> logger, IConfiguration configuration)
     {
         _logger = logger ?? throw new ArgumentNullException();
+        _configuration = configuration ?? throw new ArgumentNullException();
     }
 
     public void Init()
     {
         var config = new ProducerConfig()
         {
-            BootstrapServers = "localhost:9092",
+            BootstrapServers = _configuration.GetSection("Kafka:BootstrapServers").Value,
         };
 
         _producer = new ProducerBuilder<KT, EventType>(config)

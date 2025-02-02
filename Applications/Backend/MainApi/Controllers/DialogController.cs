@@ -1,10 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using Shared.Database.Abstract;
 using SocialNetworkOtus.Applications.Backend.MainApi.Models;
 using SocialNetworkOtus.Shared.Database.Entities;
 using SocialNetworkOtus.Shared.Database.PostgreSql.Repositories;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text;
 
 namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers;
 
@@ -13,25 +19,33 @@ namespace SocialNetworkOtus.Applications.Backend.MainApi.Controllers;
 [Route("api/dialog")]
 public class DialogController : ControllerBase
 {
+    private string _dialogServicePath = "";
+
     private readonly ILogger<DialogController> _logger;
     private readonly IMessageRepository _messageRepository;
     private readonly UserRepository _userRepository;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
 
     public DialogController(
         ILogger<DialogController> logger,
         IMessageRepository messageRepository,
-        UserRepository userRepository)
+        UserRepository userRepository,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration)
     {
         _logger = logger;
         _messageRepository = messageRepository;
         _userRepository = userRepository;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
     }
 
     [HttpPost("{userId}/send")]
     [ProducesResponseType<MessageResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
-    public IActionResult Send(string userId, [FromBody] DialogSendRequest request)
+    public async Task<IActionResult> Send(string userId, [FromBody] DialogSendRequest request)
     {
         try
         {
@@ -45,17 +59,18 @@ public class DialogController : ControllerBase
                 });
             }
 
-            _messageRepository.Create(new MessageEntity()
-            {
-                From = currentUserId,
-                To = userId,
-                Text = request.Text,
-            });
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var mes = await SendRequest<MessageResponse, DialogSendRequest>($"{userId}/send", token, request);
 
-            return Ok(new MessageResponse()
+            if (mes == null)
             {
-                Message = $"Message created successfully.",
-            });
+                return BadRequest(new MessageResponse()
+                {
+                    Message = $"Message not created.",
+                });
+            }
+
+            return Ok(mes);
         }
         catch (Exception ex)
         {
@@ -70,7 +85,7 @@ public class DialogController : ControllerBase
     [ProducesResponseType<DialogListResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ErrorResponse>(StatusCodes.Status500InternalServerError)]
-    public IActionResult List(string userId, [FromBody] DialogListRequest request)
+    public async Task<IActionResult> List(string userId, [FromBody] DialogListRequest request)
     {
         try
         {
@@ -84,46 +99,18 @@ public class DialogController : ControllerBase
                 });
             }
 
-            IEnumerable<MessageEntity> messages = new List<MessageEntity>();
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var mes = await SendRequest<DialogListResponse, DialogListRequest>($"{userId}/list", token, request);
 
-            if (request.NewestMessageId == null && request.OldestMessageId == null)
+            if (mes == null)
             {
-                messages = _messageRepository.GetListLatest(currentUserId, userId);
-            }
-            if (request.NewestMessageId != null && request.OldestMessageId == null)
-            {
-                messages = _messageRepository.GetListNewest(currentUserId, userId, request.NewestMessageId.Value);
-            }
-            if (request.NewestMessageId == null && request.OldestMessageId != null)
-            {
-                messages = _messageRepository.GetListOldest(currentUserId, userId, request.OldestMessageId.Value);
-            }
-            if (request.NewestMessageId != null && request.OldestMessageId != null)
-            {
-                if (request.NewestMessageId <= request.OldestMessageId)
+                return BadRequest(new MessageResponse()
                 {
-                    return BadRequest(new MessageResponse()
-                    {
-                        Message = "Newest message id should be more oldest message id.",
-                    });
-                }
-
-                messages = _messageRepository.GetListInRange(currentUserId, userId, request.NewestMessageId.Value, request.OldestMessageId.Value);
+                    Message = $"Uncnown error.",
+                });
             }
 
-            return Ok(new DialogListResponse()
-            {
-                NewestMessageId = messages.Any() ? messages.First().Id : null,
-                OldestMessageId = messages.Any() ? messages.Last().Id : null,
-                Messages = messages.Select(e => new DialogMessage()
-                {
-                    Id = e.Id,
-                    From = e.From,
-                    To = e.To,
-                    SendingTime = e.SendingTime,
-                    Text = e.Text,
-                }),
-            });
+            return Ok(mes);
         }
         catch (Exception ex)
         {
@@ -150,6 +137,39 @@ public class DialogController : ControllerBase
     {
         var user = _userRepository.Get(userId);
         return user != null;
+    }
+
+    private async Task<TResult> SendRequest<TResult, TRequest>(string path, string token, TRequest body, Action<HttpStatusCode>? action = null)
+    {
+        if (string.IsNullOrEmpty(_dialogServicePath))
+        {
+            _dialogServicePath = _configuration.GetConnectionString("DialogService");
+        }
+        var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"{_dialogServicePath}/{path}"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Content = JsonContent.Create(body);
+
+        try
+        {
+            using (var client = _httpClientFactory.CreateClient())
+            {
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation($"Response status = {response.StatusCode}.");
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var resp = await response.Content.ReadFromJsonAsync<TResult>();
+                    return resp;
+                }
+                return default;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Request error.");
+            return default;
+        }
     }
 
     #endregion
