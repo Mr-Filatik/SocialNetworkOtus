@@ -1,0 +1,130 @@
+name: social-network-otus
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    volumes:
+      - ./docker/postgresql/:/var/lib/postgresql/data/
+    ports:
+      - 8010:5432
+    restart: always
+    environment:
+      PGPORT: 8010
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+    networks:
+      - social-network-otus-network
+
+  tarantool-1:
+    image: tarantool/tarantool:latest
+    container_name: tarantool-1
+    networks:
+      - social-network-otus-network
+    ports:
+      - "8021:3301"
+
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: TRUE
+    command:
+      --port 8031
+    restart: always
+    ports:
+      - 8031:6380
+    networks:
+      - social-network-otus-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - 8049:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-server:latest
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 8041:9092
+      - 9102:9101
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:8041
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9102
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:29092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - 8040:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true
+
+  backend-main:
+    container_name: backend-main
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    ports:
+      - 8080:8080
+    restart: always
+    build:
+      context: .
+      dockerfile: Applications/Backend/MainApi/Dockerfile
+    environment:
+      - ConnectionStrings__DialogService=https://localhost:8081/api/dialog
+      - Postgres__ConnectionStrings__Master=Username=postgres;Password=password;Server=postgres;Port=8010;Database=postgres;
+      - Postgres__ConnectionStrings__Replicas__0=Username=postgres;Password=password;Server=postgres;Port=8010;Database=postgres;
+      - Postgres__ConnectionStrings__Replicas__1=Username=postgres;Password=password;Server=postgres;Port=8010;Database=postgres;
+      - Postgres__ConnectionStrings__Shards__0=Username=postgres;Password=password;Server=postgres;Port=8010;Database=postgres;
+      - RedisOptions__Endpoint=redis:8031
+      - Kafka__BootstrapServers=localhost:8041
+    networks:
+      - social-network-otus-network
+
+  backend-dialog:
+    container_name: backend-dialog
+    depends_on:
+      - tarantool-1
+    ports:
+      - 8081:8080
+    restart: always
+    build:
+      context: .
+      dockerfile: Applications/Backend/DialogApi/Dockerfile
+    environment:
+      - ConnectionStrings__UserService=https://localhost:8080/api/user
+      - Tarantool__Host=localhost
+      - Tarantool__Port=8021
+    networks:
+      - social-network-otus-network
+
+networks:
+  social-network-otus-network:
+    driver: bridge

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Shared.Database.Abstract;
 using SocialNetworkOtus.Applications.Backend.DialogApi.Models;
 using SocialNetworkOtus.Shared.Database.Entities;
+using SocialNetworkOtus.Shared.Metrics.OpenTelemetry;
 using System;
 using System.Diagnostics;
 using System.Net.Http.Headers;
@@ -23,19 +24,22 @@ public class DialogController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _memoryCache;
+    private readonly ApiMetrics _metrics;
 
     public DialogController(
         ILogger<DialogController> logger,
         IMessageRepository messageRepository,
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
-        IMemoryCache memoryCache)
+        IMemoryCache memoryCache,
+        ApiMetrics metrics)
     {
         _logger = logger;
         _messageRepository = messageRepository;
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
         _memoryCache = memoryCache;
+        _metrics = metrics;
     }
 
     [HttpPost("{userId}/send")]
@@ -55,6 +59,7 @@ public class DialogController : ControllerBase
 
             if (res != null && res.Any(x => !x))
             {
+                _metrics.AddResponseSuccess("message_send");
                 return BadRequest(new MessageResponse()
                 {
                     Message = "User does not exist.",
@@ -68,6 +73,7 @@ public class DialogController : ControllerBase
                 Text = request.Text,
             });
 
+            _metrics.AddResponseSuccess("message_send");
             return Ok(new MessageResponse()
             {
                 Message = $"Message created successfully.",
@@ -75,6 +81,7 @@ public class DialogController : ControllerBase
         }
         catch (Exception ex)
         {
+            _metrics.AddResponseError("message_send");
             return StatusCode(500, new ErrorResponse()
             {
                 Message = ex.Message, //dont return message
@@ -99,6 +106,7 @@ public class DialogController : ControllerBase
 
             if (res != null && res.Any(x => !x))
             {
+                _metrics.AddResponseSuccess("message_list");
                 return BadRequest(new MessageResponse()
                 {
                     Message = "User does not exist.",
@@ -123,6 +131,7 @@ public class DialogController : ControllerBase
             {
                 if (request.NewestMessageId <= request.OldestMessageId)
                 {
+                    _metrics.AddResponseSuccess("message_list");
                     return BadRequest(new MessageResponse()
                     {
                         Message = "Newest message id should be more oldest message id.",
@@ -132,6 +141,7 @@ public class DialogController : ControllerBase
                 messages = _messageRepository.GetListInRange(currentUserId, userId, request.NewestMessageId.Value, request.OldestMessageId.Value);
             }
 
+            _metrics.AddResponseSuccess("message_list");
             return Ok(new DialogListResponse()
             {
                 NewestMessageId = messages.Any() ? messages.First().Id : null,
@@ -148,6 +158,7 @@ public class DialogController : ControllerBase
         }
         catch (Exception ex)
         {
+            _metrics.AddResponseError("message_list");
             return StatusCode(500, new ErrorResponse()
             {
                 Message = ex.Message, //dont return message

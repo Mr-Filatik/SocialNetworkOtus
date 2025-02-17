@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\Database\Shared.Database.Entities\Shared.Database.Entities.csproj" />
     <ProjectReference Include="..\..\..\Shared\Database\Shared.Database.Tarantool\Shared.Database.Tarantool.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Metrics\Shared.Metrics.OpenTelemetry\Shared.Metrics.OpenTelemetry.csproj" />
   </ItemGroup>
 
   <ItemGroup>

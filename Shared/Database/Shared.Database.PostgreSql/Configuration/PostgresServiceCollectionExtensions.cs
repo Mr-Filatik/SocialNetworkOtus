@@ -17,7 +17,7 @@ public static class PostgresServiceCollectionExtensions
         var postgreOptions = new PostgresOptions()
         {
             MasterConnectionString = configuration.GetSection("Postgres:ConnectionStrings:Master").Value,
-            ReplicaConnectionStrings = configuration.GetSection("Postgres:ConnectionStrings:Replicas").Get<string[]>(),
+            ReplicaConnectionStrings = configuration.GetSection("Postgres:ConnectionStrings:Replicas").Value,
             ShardConnectionStrings = configuration.GetSection("Postgres:ConnectionStrings:Shards").Get<string[]>(),
         };
         options?.Invoke(postgreOptions);

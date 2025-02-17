@@ -7,9 +7,9 @@ namespace SocialNetworkOtus.Shared.Database.PostgreSql;
 public class PostgreDatabaseSelector
 {
     private NpgsqlDataSource _dataMasterSource;
-    private List<NpgsqlDataSource> _dataReplicaSources;
+    //private List<NpgsqlDataSource> _dataReplicaSources;
     private List<NpgsqlDataSource> _dataShardSources;
-    private int _replicaIndex = 0;
+    //private int _replicaIndex = 0;
     private int _shardIndex = 0;
 
     private readonly PostgresOptions _options;
@@ -39,22 +39,22 @@ public class PostgreDatabaseSelector
         //    return currentSource;
         //}
 
-        //if (onlyRead)
-        //{
-        //    if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)
-        //    {
-        //        _dataReplicaSources = new List<NpgsqlDataSource>();
-        //        foreach (var conn in _options.ReplicaConnectionStrings)
-        //        {
-        //            _dataReplicaSources.Add(NpgsqlDataSource.Create(conn));
-        //        }
-        //    }
+        if (onlyRead)
+        {
+            //if (_dataReplicaSources == null || _dataReplicaSources.Count == 0)
+            //{
+            //    _dataReplicaSources = new List<NpgsqlDataSource>();
+            //    foreach (var conn in _options.ReplicaConnectionStrings)
+            //    {
+            //        _dataReplicaSources.Add(NpgsqlDataSource.Create(conn));
+            //    }
+            //}
 
-        //    var currentSource = _dataReplicaSources[_replicaIndex];
-        //    //_logger.LogInformation($"Get replica connection {currentSource.ConnectionString}");
-        //    _replicaIndex = (_replicaIndex + 1) % _dataReplicaSources.Count;
-        //    return currentSource;
-        //}
+            //var currentSource = _dataReplicaSources[_replicaIndex];
+            ////_logger.LogInformation($"Get replica connection {currentSource.ConnectionString}");
+            //_replicaIndex = (_replicaIndex + 1) % _dataReplicaSources.Count;
+            return NpgsqlDataSource.Create(_options.ReplicaConnectionStrings);
+        }
 
         if (_dataMasterSource is null)
         {

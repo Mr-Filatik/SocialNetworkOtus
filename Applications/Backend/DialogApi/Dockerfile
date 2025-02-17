@@ -4,8 +4,13 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER $APP_UID
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 8090
+EXPOSE 8091
+EXPOSE 8092
+EXPOSE 8093
+EXPOSE 8094
+EXPOSE 8095
+EXPOSE 8096
 
 
 # This stage is used to build the service project

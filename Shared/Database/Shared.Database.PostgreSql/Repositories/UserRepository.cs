@@ -447,7 +447,7 @@ public class UserRepository
             {
                 users.Add(new UserEntity()
                 {
-                    Id = reader["id"].ToString(),
+                    Id = reader["user_id"].ToString(),
                     FirstName = reader["first_name"].ToString(),
                     SecondName = reader["second_name"].ToString(),
                     Gender = bool.Parse(reader["gender"].ToString()) ? Entities.Types.Gender.Male : Entities.Types.Gender.Female,

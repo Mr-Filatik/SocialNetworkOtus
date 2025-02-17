@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DialogApi.Middlewares;
 using Microsoft.Extensions.Caching.Memory;
+using SocialNetworkOtus.Shared.Metrics.OpenTelemetry.Configuration;
 
 namespace DialogApi
 {
@@ -94,6 +95,11 @@ namespace DialogApi
 
             builder.Services.AddHttpClient();
 
+            builder.Services.AddApiMetrics(config, options =>
+            {
+                options.ServiceName = "Dialog Api";
+            });
+
             builder.Services.AddSingleton<IMemoryCache>(new MemoryCache(new MemoryCacheOptions
             {
                 SizeLimit = 1000,
@@ -108,6 +114,8 @@ namespace DialogApi
                 app.UseSwagger();
                 app.UseSwaggerUI();
             //}
+
+            app.UseApiMetrics();
 
             app.UseHttpsRedirection();
 
